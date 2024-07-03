@@ -115,7 +115,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Sigo el código de Qualud para calcular el nivel del usuario para tanto hacerlo rápido
-     * como para que sea igual a como se calcula en front y no haya inconsistencias.
+     * como para que sea igual a como se calcula en la app y no haya incoherencias.
      * https://github.com/ScienceForChange/SoundCollect_frontend/blob/2232722258f77046d48cd94ca5f3930bbfabba56/src/app/services/user-service.ts#L71
      */
     public function calculatedLevel()
@@ -144,6 +144,9 @@ class User extends Authenticatable implements MustVerifyEmail
                     $sameDayExtraPoints = ['day' => $observation['created_at'], 'used' => false];
                 }
         }
+
+        // TODO: cambiar esto por un evento o al menos quitar la lógica de aquí pero de momento aquí se quda.
+        if( (!$this->is_expert) && $points > 21 ) $this->update(['is_expert', true]);
 
         return $points;
     }
