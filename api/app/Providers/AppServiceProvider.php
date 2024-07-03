@@ -30,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
 
         Http::macro('openWeather', function () {
             return Http::withQueryParameters([
-                'appi' => config('services.openweathermap.key'),
+                'appid' => config('services.openweathermap.key'),
                 'units' => config('services.openweathermap.units'),
             ])->baseUrl(config('services.openweathermap.url'));
         });

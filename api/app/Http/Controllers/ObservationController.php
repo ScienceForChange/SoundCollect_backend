@@ -66,7 +66,7 @@ class ObservationController extends Controller
         );
 
         // Immediately execute the given callback if there was a client or server error
-        $response->onError($response->throw());
+        $response->onError(fn() => $response->throw());
 
         $data = $response->object();
 
