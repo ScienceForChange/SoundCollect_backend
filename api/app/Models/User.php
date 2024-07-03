@@ -146,7 +146,7 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         // TODO: cambiar esto por un evento o al menos quitar la lógica de aquí pero de momento aquí se quda.
-        if( (!$this->is_expert) && $points > 21 ) $this->update(['is_expert', true]);
+        if( (!$this->is_expert) && $points >= 21 ) $this->update(['is_expert', true]);
 
         return $points;
     }
