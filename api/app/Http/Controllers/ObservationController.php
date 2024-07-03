@@ -58,7 +58,7 @@ class ObservationController extends Controller
         // We wrap the call to the OpenWeather API in a try/catch block to handle and have error logs
         // because Laravel's HTTP client wrapper does not throw exceptions on client or server errors (400 and 500 level responses from servers)
         try {
-        $response = Http::openWeather()->get('/', 
+        $response = Http::openWeather()->get('/',
             [
                 'lat' => $validated['latitude'],
                 'lon' => $validated['longitude'],
