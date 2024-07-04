@@ -45,10 +45,13 @@ class StoreObservationRequest extends FormRequest
             'loudness_N' => ['sometimes'],
             'roughtness_R' => ['sometimes'],
             'fluctuation_strength_F' => ['sometimes'],
+
             'images.*' => ['sometimes'],
-            'latitude' => ['required', 'string'],
-            'longitude' => ['required', 'string'],
             'sound_types' => ['sometimes'],
+
+            'latitude' => ['required'],
+            'longitude' => ['required'],
+
             'quiet' => ['sometimes'],
             'cleanliness' => ['sometimes'],
             'accessibility' => ['sometimes'],
@@ -56,8 +59,13 @@ class StoreObservationRequest extends FormRequest
             'influence' => ['sometimes'],
             'landmark' => ['sometimes'],
             'protection' => ['sometimes'],
+
+            'coordinates' => ['required', 'array'],
+            'type' => ['required'],
+
             'user_id' => ['required','exists:users,id'],
-            'path' => ['required', 'string'],
+
+            // 'path' => ['required', 'string'],
         ];
     }
 }

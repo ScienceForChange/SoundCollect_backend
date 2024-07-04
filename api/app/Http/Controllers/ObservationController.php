@@ -15,6 +15,9 @@ use App\Services\PointInPolygonService;
 use App\Enums\Observation\PolygonQuery;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Support\Facades\Http;
+use MatanYadaev\EloquentSpatial\Objects\LineString;
+use MatanYadaev\EloquentSpatial\Objects\Point;
+use MultiLineString;
 use Throwable;
 
 class ObservationController extends Controller
@@ -82,7 +85,23 @@ class ObservationController extends Controller
             return false;
         }
 
-        $observation = Observation::create($validated);
+        if(!true){
+            // $observation = Observation::create([
+            //     'coordinates' =>
+            //         new MultiLineString([
+            //             collect($validated['coordinates'])->map(fn($coordinate) => new LineString([$coordinate]))
+            //         ]),
+            // ]);
+        } else {
+            // dd(new LineString(collect($validated['coordinates'][0])->map(fn($coordinate) => new Point($coordinate[0], $coordinate[1]))));
+            $observation = Observation::create([
+                'coordinates' => new LineString(
+                    collect($validated['coordinates'][0])
+                        ->map(fn($coordinate) => new Point($coordinate[1], $coordinate[0]))->all()
+                        )
+            ]);
+        }
+
 
         if (array_key_exists('sound_types', $validated)) { // En realidad no hace falta esta comprobación porque "sound_types" es requerido pero por si acaso.
             $observation->types()->attach($validated['sound_types']);

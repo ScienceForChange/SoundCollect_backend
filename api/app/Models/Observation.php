@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use MatanYadaev\EloquentSpatial\Objects\LineString;
+use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
 class Observation extends Model
 {
-    use HasFactory, SoftDeletes, HasUuids;
+    use HasFactory, SoftDeletes, HasUuids, HasSpatial;
 
     /**
      * The "type" of the primary key ID.
@@ -29,6 +31,8 @@ class Observation extends Model
     public $incrementing = false;
 
     protected $fillable = [
+        'user_id',
+
         'Leq',
         'LAeqT',
         'LAmax',
@@ -39,9 +43,14 @@ class Observation extends Model
         'loudness_N',
         'roughtness_R',
         'fluctuation_strength_F',
+
         'images',
+
         'latitude',
         'longitude',
+        'coordinates',
+        'type',
+
         'quiet',
         'cleanliness',
         'accessibility',
@@ -49,17 +58,30 @@ class Observation extends Model
         'influence',
         'landmark',
         'protection',
-        'wind_speed',
-        'humidity',
+
         'temperature',
         'pressure',
-        'user_id',
-        'path'
+        'humidity',
+        'wind_speed',
+
+        'pleasant',
+        'chaotic',
+        'vibrant',
+        'uneventful',
+        'calm',
+        'annoying',
+        'eventfull',
+        'monotonous',
+        'overall',
+
+        'path',
     ];
 
     protected $casts = [
+        'Leq' => 'array', //
         'images' => 'array',
         'LAeqT' => 'array',
+        'coordinates' => LineString::class,
     ];
 
     public function user(): BelongsTo
@@ -73,12 +95,6 @@ class Observation extends Model
     public function types(): BelongsToMany
     {
         return $this->belongsToMany(Type::class);
-    }
-
-    //add polyline observation relationship
-    public function polylines(): HasMany
-    {
-        return $this->hasMany(Polyline::class);
     }
 
     //add segment observation relationship
