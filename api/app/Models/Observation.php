@@ -53,6 +53,15 @@ class Observation extends Model
         'humidity',
         'temperature',
         'pressure',
+        'pleasant',
+        'chaotic',
+        'vibrant',
+        'uneventful',
+        'calm',
+        'annoying',
+        'eventfull',
+        'monotonous',
+        'overall',
         'user_id',
         'path'
     ];
