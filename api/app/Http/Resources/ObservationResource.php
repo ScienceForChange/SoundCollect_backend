@@ -46,6 +46,15 @@ class ObservationResource extends JsonResource
                 'humidity' => $this->humidity,
                 'temperature' => $this->temperature,
                 'pressure' => $this->pressure,
+                'pleasant' => $this->transformValues($this->pleasant),
+                'chaotic' => $this->transformValues($this->chaotic),
+                'vibrant' => $this->transformValues($this->vibrant),
+                'uneventful' => $this->transformValues($this->uneventful),
+                'calm' => $this->transformValues($this->calm),
+                'annoying' => $this->transformValues($this->annoying),
+                'eventfull' => $this->transformValues($this->eventfull),
+                'monotonous' => $this->transformValues($this->monotonous),
+                'overall' => $this->overall,
                 'user_id' => $this->user_id,
                 'created_at' => $this->created_at->format('Y-m-d H:i:s'),
                 'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
@@ -57,5 +66,16 @@ class ObservationResource extends JsonResource
                 'segments' => SegmentResource::collection($this->segments),
             ],
         ];
+    }
+
+    public function transformValues($value) {
+        return match ($value) {
+            'Molt d\'acord' => 5,
+            'D’acord' => 4,
+            'Nid\'acord / no en des acord' => 3,
+            'Desacord' => 2,
+            'Molt en desacord' => 1,
+            default => 'N/A',
+        };
     }
 }
