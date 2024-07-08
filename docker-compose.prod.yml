@@ -79,6 +79,8 @@ services:
       - type: volume
         source: mysqldata
         target: /var/lib/mysql
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
 
