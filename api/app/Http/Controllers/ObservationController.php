@@ -149,7 +149,7 @@ class ObservationController extends Controller
         $end = $request->interval['end'];
 
         // We use whereTime to filter the observations that are within the TIME interval (we do not care about the date)
-        $observations = Observation::whereTime('created_at', '>=', $start)->whereTime('created_at', '<=', $end)->get();
+        $observations = Observation::whereBetween('Leq', [20, 80])->whereTime('created_at', '>=', $start)->whereTime('created_at', '<=', $end)->get();
 
         $observationsFiltered = $observations->filter(fn($observation) =>
             // We use the pointInPolygon method to filter the observations that are within the polygon, passing string, array args and comparing the result with the concern requested
