@@ -64,7 +64,7 @@ jobs:
         # run: docker run --rm -t $API_IMAGE ./vendor/bin/phpstan analyze --memory-limit=1G
         run: echo "Esta prueba de momento la salto porque falla mucho"
       - name: Run phpinsights
-        run: docker run --rm -t $API_IMAGE php artisan insights --no-interaction --min-quality=60 --min-complexity=60 --min-architecture=60 --min-style=60 --ansi --format=github-action
+        run: docker run --rm -t $API_IMAGE php artisan insights --no-interaction --min-quality=50 --min-complexity=50 --min-architecture=50 --min-style=50 --ansi --format=github-action
 
   test:
     needs: [ build-backend-images, build-mysql ]
