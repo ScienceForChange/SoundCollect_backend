@@ -19,7 +19,7 @@ As long as this notice (including author name and details) is included and
 UNALTERED, this code can be used and distributed freely.
 */
 
-class pointInPolygonService {
+class PointInPolygonService {
     public $pointOnVertex = true; // Check if the point sits exactly on one of the vertices?
 
     public function __construct()
