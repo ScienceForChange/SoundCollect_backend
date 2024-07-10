@@ -29,6 +29,7 @@ class UserResource extends JsonResource
                 'level' => $this->when($request->has('with-levels'), $this->resource->calculatedLevel()),
                 // Este campo se creó en la bbdd como integer y nunca se ha usado, pero lo agrego ya aquí
                 'is_expert' => (bool) $this->is_expert,
+                'calibration_method_id' => $this->calibration_method_id,
                 'created_at' => $this->created_at->format('Y-m-d H:i:s'),
                 'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
             ],
