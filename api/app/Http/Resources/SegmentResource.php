@@ -27,6 +27,10 @@ class SegmentResource extends JsonResource
             'LAmax' => $this->LAmax,
             'LAmin' => $this->LAmin,
             'LAeq' => $this->LAeq,
+            "LAeqT"  => $this->LAeqT,
+            "freq_3" => $this->freq_3,
+            "spec_3" => $this->spec_3,
+            "spec_3_dB" => $this->spec_3_dB,
         ];
     }
 }

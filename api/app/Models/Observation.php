@@ -84,12 +84,6 @@ class Observation extends Model
         return $this->belongsToMany(Type::class);
     }
 
-    //add polyline observation relationship
-    public function polylines(): HasMany
-    {
-        return $this->hasMany(Polyline::class);
-    }
-
     //add segment observation relationship
     public function segments(): HasMany
     {

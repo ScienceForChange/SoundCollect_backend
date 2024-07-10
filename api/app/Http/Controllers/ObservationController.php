@@ -88,8 +88,12 @@ class ObservationController extends Controller
             $observation->types()->attach($validated['sound_types']);
         }
 
+        if(array_key_exists('segments', $validated)) {
+            $observation->segments()->createMany($validated['segments']);
+        }
+
         return $this->success(
-            new ObservationResource($observation->fresh()),
+            new ObservationResource($observation->fresh()->load('segments')),
             Response::HTTP_CREATED
         );
     }
