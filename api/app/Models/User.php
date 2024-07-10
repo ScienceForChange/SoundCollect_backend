@@ -50,6 +50,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'avatar_id',
         'autocalibration',
+        'calibration_method_id'
     ];
 
     /**
@@ -111,6 +112,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendNewPasswordNotification($newPassword): void
     {
         $this->notify(new NewPassword($newPassword));
+    }
+
+    public function calibration_method()
+    {
+        return $this->belongsTo(CalibrationMethod::class);
     }
 
     /**
