@@ -46,8 +46,8 @@ class StoreObservationRequest extends FormRequest
             'roughtness_R' => ['sometimes'],
             'fluctuation_strength_F' => ['sometimes'],
             'images.*' => ['sometimes'],
-            'latitude' => ['required', 'string'],
-            'longitude' => ['required', 'string'],
+            'latitude' => ['required'],
+            'longitude' => ['required'],
             'sound_types' => ['sometimes'],
             'quiet' => ['sometimes'],
             'cleanliness' => ['sometimes'],
@@ -67,6 +67,22 @@ class StoreObservationRequest extends FormRequest
             'overall' => ['sometimes'],
             'user_id' => ['required','exists:users,id'],
             'path' => ['required', 'string'],
+
+            'segments' => ['sometimes', 'array'],
+            'segments.*.position' => ['sometimes'],
+            'segments.*.start_latitude' => ['sometimes'],
+            'segments.*.start_longitude' => ['sometimes'],
+            'segments.*.end_latitude' => ['sometimes'],
+            'segments.*.end_longitude' => ['sometimes'],
+            'segments.*.L90' => ['sometimes'],
+            'segments.*.L10' => ['sometimes'],
+            'segments.*.LAmax' => ['sometimes'],
+            'segments.*.LAmin' => ['sometimes'],
+            'segments.*.LAeq' => ['sometimes'],
+            'segments.*.LAeqT' => ['sometimes'],
+            'segments.*.freq_3' => ['sometimes'],
+            'segments.*.spec_3' => ['sometimes'],
+            'segments.*.spec_3_dB' => ['sometimes'],
         ];
     }
 }
