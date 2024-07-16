@@ -85,10 +85,9 @@ class ObservationController extends Controller
 
         // make http call to timezone api on this url http://api.timezonedb.com/v2.1/get-time-zone?key=YOUR_API_KEY&format=json&by=position&lat=40.689247&lng=-74.044502
         // to get the timezone of the user and then convert the time to the user's local time
-        // api key is 1XUYSIWVPKW6
         try {
             $local_time_api_response = Http::get('http://api.timezonedb.com/v2.1/get-time-zone', [
-                'key' => '1XUYSIWVPKW6',
+                'key' => env('TIMEZONE_API_KEY'),
                 'format' => 'json',
                 'by' => 'position',
                 'lat' => $validated['latitude'],
