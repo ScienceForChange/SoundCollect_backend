@@ -102,7 +102,7 @@ class ObservationController extends Controller
             Arr::set($validated, 'user_local_time', $local_time_api_response_object->formatted);
 
         } catch (\Throwable $th) {
-            return $this->error('Error when calling user_local_time api: ' . $th, Response::HTTP_INTERNAL_SERVER_ERROR);
+            // return $this->error('Error when calling user_local_time api: ' . $th, Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         $observation = Observation::create($validated);
