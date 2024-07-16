@@ -48,38 +48,57 @@ class ObservationController extends Controller
 
         if ($request->hasFile('images')) {
             $images = $request->file('images');
-            $folder = "users/". $request->user()->id;
+            $folder = "users/" . $request->user()->id;
             foreach ($images as $key => $image) {
                 $url_images = Storage::put($folder, $image, 'public');
-                Arr::set($validated, 'images.'.$key, 'https://soundcollectbucket.s3.eu-central-1.amazonaws.com/'.$url_images);
+                Arr::set($validated, 'images.' . $key, 'https://soundcollectbucket.s3.eu-central-1.amazonaws.com/' . $url_images);
             }
         }
 
         // We wrap the call to the OpenWeather API in a try/catch block to handle and have error logs
         // because Laravel's HTTP client wrapper does not throw exceptions on client or server errors (400 and 500 level responses from servers)
         try {
-        $response = Http::openWeather()->get('/',
-            [
-                'lat' => $validated['latitude'],
-                'lon' => $validated['longitude'],
-            ]
-        );
+            $response = Http::openWeather()->get(
+                '/',
+                [
+                    'lat' => $validated['latitude'],
+                    'lon' => $validated['longitude'],
+                ]
+            );
 
-        // Immediately execute the given callback if there was a client or server error
-        $response->onError(fn() => $response->throw());
+            // Immediately execute the given callback if there was a client or server error
+            $response->onError(fn () => $response->throw());
 
-        $data = $response->object();
+            $data = $response->object();
 
-        Arr::set($validated, 'wind_speed', $data->wind->speed);
-        Arr::set($validated, 'humidity', $data->main->humidity);
-        Arr::set($validated, 'temperature', $data->main->temp);
-        Arr::set($validated, 'pressure', $data->main->pressure);
-
+            Arr::set($validated, 'wind_speed', $data->wind->speed);
+            Arr::set($validated, 'humidity', $data->main->humidity);
+            Arr::set($validated, 'temperature', $data->main->temp);
+            Arr::set($validated, 'pressure', $data->main->pressure);
         } catch (\Illuminate\Http\Client\RequestException $err) {
             // to report an exception but continue handling the current request
             report($err);
 
-            return false;
+            // return false;
+        }
+
+
+        // make http call to timezone api on this url http://api.timezonedb.com/v2.1/get-time-zone?key=YOUR_API_KEY&format=json&by=position&lat=40.689247&lng=-74.044502
+        // to get the timezone of the user and then convert the time to the user's local time
+        // api key is 1XUYSIWVPKW6
+        try {
+            $local_time_api_response = Http::get('http://api.timezonedb.com/v2.1/get-time-zone', [
+                'key' => '1XUYSIWVPKW6',
+                'format' => 'json',
+                'by' => 'position',
+                'lat' => $validated['latitude'],
+                'lng' => $validated['longitude'],
+            ]);
+
+            // add the user_local_time to the validated array
+            Arr::set($validated, 'user_local_time', $local_time_api_response->formatted);
+        } catch (\Throwable $th) {
+            return $this->error('Error when calling user_local_time api: ' . $th, Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         $observation = Observation::create($validated);
@@ -88,7 +107,7 @@ class ObservationController extends Controller
             $observation->types()->attach($validated['sound_types']);
         }
 
-        if(array_key_exists('segments', $validated)) {
+        if (array_key_exists('segments', $validated)) {
             $observation->segments()->createMany($validated['segments']);
         }
 
@@ -122,7 +141,7 @@ class ObservationController extends Controller
      */
     public function destroy(Observation $observation)
     {
-        if($observation->user_id !== auth()->user()->id){
+        if ($observation->user_id !== auth()->user()->id) {
             return $this->error(
                 'You can only delete your own observations',
                 Response::HTTP_UNAUTHORIZED
@@ -155,11 +174,13 @@ class ObservationController extends Controller
         // We use whereTime to filter the observations that are within the TIME interval (we do not care about the date)
         $observations = Observation::whereBetween('Leq', [20, 80])->whereTime('created_at', '>=', $start)->whereTime('created_at', '<=', $end)->get();
 
-        $observationsFiltered = $observations->filter(fn($observation) =>
+        $observationsFiltered = $observations->filter(
+            fn ($observation) =>
             // We use the pointInPolygon method to filter the observations that are within the polygon, passing string, array args and comparing the result with the concern requested
             $pointInPolygonService->pointInPolygon(
-                                        sprintf("%s %s", $observation->longitude, $observation->latitude),
-                                        $request->polygon) === $request->concern
+                sprintf("%s %s", $observation->longitude, $observation->latitude),
+                $request->polygon
+            ) === $request->concern
         );
 
         return ObservationResource::collection($observationsFiltered);

@@ -59,6 +59,7 @@ class ObservationResource extends JsonResource
                 'created_at' => $this->created_at->format('Y-m-d H:i:s'),
                 'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
                 'path' => $this->path,
+                'user_local_time' => $this->user_local_time,
             ],
             'relationships' => [
                 'user' => UserResource::make($this->user),
