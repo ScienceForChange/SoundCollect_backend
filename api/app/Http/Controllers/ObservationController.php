@@ -95,8 +95,12 @@ class ObservationController extends Controller
                 'lng' => $validated['longitude'],
             ]);
 
-            // add the user_local_time to the validated array
-            Arr::set($validated, 'user_local_time', $local_time_api_response->formatted);
+            // convert response into object
+            $local_time_api_response_object = $local_time_api_response->object();
+
+            // add the user_local_time parameter to the validated array
+            Arr::set($validated, 'user_local_time', $local_time_api_response_object->formatted);
+
         } catch (\Throwable $th) {
             return $this->error('Error when calling user_local_time api: ' . $th, Response::HTTP_INTERNAL_SERVER_ERROR);
         }
