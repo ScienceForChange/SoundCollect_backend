@@ -21,6 +21,9 @@ return new class extends Migration
             // Add a new foreign key constraint with onUpdate CASCADE and onDelete SET NULL
             $table->foreign('user_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('set null');
         });
+
+        // Update the column type and collation
+        DB::statement('ALTER TABLE soundcollect.observations MODIFY COLUMN user_id char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;');
     }
 
     /**
@@ -41,3 +44,4 @@ return new class extends Migration
         });
     }
 };
+
