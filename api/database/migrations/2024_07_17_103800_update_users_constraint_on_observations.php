@@ -27,7 +27,8 @@ return new class extends Migration
         DB::statement('ALTER TABLE soundcollect.observations MODIFY COLUMN user_id char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL;');
 
         // Update the column type and collation
-        DB::statement('ALTER TABLE soundcollect.observations DROP FOREIGN KEY observations_user_id_foreign; ALTER TABLE soundcollect.observations ADD CONSTRAINT observations_user_id_foreign FOREIGN KEY (user_id) REFERENCES soundcollect.users(id) ON DELETE SET NULL ON UPDATE CASCADE;');
+        DB::statement('ALTER TABLE soundcollect.observations DROP FOREIGN KEY observations_user_id_foreign;');
+        DB::statement('ALTER TABLE soundcollect.observations ADD CONSTRAINT observations_user_id_foreign FOREIGN KEY (user_id) REFERENCES soundcollect.users(id) ON DELETE SET NULL ON UPDATE CASCADE;');
     }
 
     /**
