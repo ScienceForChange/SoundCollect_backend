@@ -16,6 +16,7 @@ use App\Enums\Observation\PolygonQuery;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Support\Facades\Http;
 use Throwable;
+use Aws\Rekognition\RekognitionClient;
 
 class ObservationController extends Controller
 {
@@ -44,80 +45,125 @@ class ObservationController extends Controller
      */
     public function store(StoreObservationRequest $request)
     {
-        $validated = $request->validated();
+        try {
 
-        if ($request->hasFile('images')) {
-            $images = $request->file('images');
-            $folder = "users/" . $request->user()->id;
-            foreach ($images as $key => $image) {
-                $url_images = Storage::put($folder, $image, 'public');
-                Arr::set($validated, 'images.' . $key, 'https://soundcollectbucket.s3.eu-central-1.amazonaws.com/' . $url_images);
+            // validate request
+            $validated = $request->validated();
+
+            // check if observations contain images
+            if ($request->hasFile('images')) {
+
+                // get the images from the request
+                $images = $request->file('images');
+
+                // create a folder for the user in the storage
+                $folder = "users/" . $request->user()->id;
+
+                // iterate over the images and store them in the storage
+                foreach ($images as $key => $image) {
+
+                    // get image content
+                    $imageContent = file_get_contents($image->getRealPath());
+
+                    // create a rekognition client to analyse the image
+                    $rekognition = new RekognitionClient([
+                        'version' => 'latest',
+                        'region' => 'eu-central-1',
+                        'credentials' => [
+                            'key' => env('AWS_ACCESS_KEY_ID'),
+                            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                        ],
+                    ]);
+
+                    // call the detectModerationLabels method to check if the image contains any explicit content
+                    $result = $rekognition->detectModerationLabels([
+                        'Image' => ['Bytes' => $imageContent],
+                    ]);
+
+                    // get the moderation labels
+                    $labels = $result['ModerationLabels'];
+
+                    // check if any inappropriate content labels were detected
+                    if (!empty($labels)) {
+                        // Handle the detection of inappropriate content
+                        // For example, reject the upload or flag for manual review
+                        // in this case: save generic 'removed_image_fallback' instead of user uploaded file
+                        Arr::set($validated, 'images.' . $key, 'https://soundcollectbucket.s3.eu-central-1.amazonaws.com/users/image_filter_fallback/removed_image_fallback.png');
+                    } else {
+                        // store the image in the storage
+                        $url_images = Storage::put($folder, $image, 'public');
+
+                        // add the url of the image to the validated array
+                        Arr::set($validated, 'images.' . $key, 'https://soundcollectbucket.s3.eu-central-1.amazonaws.com/' . $url_images);
+                    }
+                }
             }
-        }
 
-        // We wrap the call to the OpenWeather API in a try/catch block to handle and have error logs
-        // because Laravel's HTTP client wrapper does not throw exceptions on client or server errors (400 and 500 level responses from servers)
-        try {
-            $response = Http::openWeather()->get(
-                '/',
-                [
+            // wrap the call to the OpenWeather API in a try/catch block to handle and have error logs
+            // because Laravel's HTTP client wrapper does not throw exceptions on client or server errors (400 and 500 level responses from servers)
+            try {
+                $response = Http::openWeather()->get(
+                    '/',
+                    [
+                        'lat' => $validated['latitude'],
+                        'lon' => $validated['longitude'],
+                    ]
+                );
+
+                // Immediately execute the given callback if there was a client or server error
+                $response->onError(fn () => $response->throw());
+
+                $data = $response->object();
+
+                Arr::set($validated, 'wind_speed', $data->wind->speed);
+                Arr::set($validated, 'humidity', $data->main->humidity);
+                Arr::set($validated, 'temperature', $data->main->temp);
+                Arr::set($validated, 'pressure', $data->main->pressure);
+            } catch (\Illuminate\Http\Client\RequestException $err) {
+                // to report an exception but continue handling the current request
+                report($err);
+
+                // return false;
+            }
+
+
+            // make http call to timezone api on this url http://api.timezonedb.com/v2.1/get-time-zone?key=YOUR_API_KEY&format=json&by=position&lat=40.689247&lng=-74.044502
+            // to get the timezone of the user and then convert the time to the user's local time
+            try {
+                $local_time_api_response = Http::get('http://api.timezonedb.com/v2.1/get-time-zone', [
+                    'key' => '1XUYSIWVPKW6',
+                    'format' => 'json',
+                    'by' => 'position',
                     'lat' => $validated['latitude'],
-                    'lon' => $validated['longitude'],
-                ]
+                    'lng' => $validated['longitude'],
+                ]);
+
+                // convert response into object
+                $local_time_api_response_object = $local_time_api_response->object();
+
+                // add the user_local_time parameter to the validated array
+                Arr::set($validated, 'user_local_time', $local_time_api_response_object->formatted);
+            } catch (\Throwable $th) {
+                // return $this->error('Error when calling user_local_time api: ' . $th, Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            $observation = Observation::create($validated);
+
+            if (array_key_exists('sound_types', $validated)) { // En realidad no hace falta esta comprobación porque "sound_types" es requerido pero por si acaso.
+                $observation->types()->attach($validated['sound_types']);
+            }
+
+            if (array_key_exists('segments', $validated)) {
+                $observation->segments()->createMany($validated['segments']);
+            }
+
+            return $this->success(
+                new ObservationResource($observation->fresh()->load('segments')),
+                Response::HTTP_CREATED
             );
-
-            // Immediately execute the given callback if there was a client or server error
-            $response->onError(fn () => $response->throw());
-
-            $data = $response->object();
-
-            Arr::set($validated, 'wind_speed', $data->wind->speed);
-            Arr::set($validated, 'humidity', $data->main->humidity);
-            Arr::set($validated, 'temperature', $data->main->temp);
-            Arr::set($validated, 'pressure', $data->main->pressure);
-        } catch (\Illuminate\Http\Client\RequestException $err) {
-            // to report an exception but continue handling the current request
-            report($err);
-
-            // return false;
-        }
-
-
-        // make http call to timezone api on this url http://api.timezonedb.com/v2.1/get-time-zone?key=YOUR_API_KEY&format=json&by=position&lat=40.689247&lng=-74.044502
-        // to get the timezone of the user and then convert the time to the user's local time
-        try {
-            $local_time_api_response = Http::get('http://api.timezonedb.com/v2.1/get-time-zone', [
-                'key' => '1XUYSIWVPKW6',
-                'format' => 'json',
-                'by' => 'position',
-                'lat' => $validated['latitude'],
-                'lng' => $validated['longitude'],
-            ]);
-
-            // convert response into object
-            $local_time_api_response_object = $local_time_api_response->object();
-
-            // add the user_local_time parameter to the validated array
-            Arr::set($validated, 'user_local_time', $local_time_api_response_object->formatted);
-
         } catch (\Throwable $th) {
-            // return $this->error('Error when calling user_local_time api: ' . $th, Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->error('Error when calling user_local_time apiGeneral error when created observation is: ' . $th, Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $observation = Observation::create($validated);
-
-        if (array_key_exists('sound_types', $validated)) { // En realidad no hace falta esta comprobación porque "sound_types" es requerido pero por si acaso.
-            $observation->types()->attach($validated['sound_types']);
-        }
-
-        if (array_key_exists('segments', $validated)) {
-            $observation->segments()->createMany($validated['segments']);
-        }
-
-        return $this->success(
-            new ObservationResource($observation->fresh()->load('segments')),
-            Response::HTTP_CREATED
-        );
     }
 
     /**
