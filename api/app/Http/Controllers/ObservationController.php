@@ -80,15 +80,29 @@ class ObservationController extends Controller
                         'Image' => ['Bytes' => $imageContent],
                     ]);
 
+                    // Call the DetectFaces method to check if the image contains any faces
+                    $result_face_detection = $rekognition->detectFaces([
+                        'Image' => [
+                            'Bytes' => $imageContent,
+                        ],
+                        'Attributes' => ['ALL'], // Use 'ALL' to get detailed facial attributes, 'DEFAULT' for simpler details
+                    ]);
+
                     // get the moderation labels
                     $labels = $result['ModerationLabels'];
 
+                    // get the face details
+                    $face_details = $result_face_detection['FaceDetails'];
+
                     // check if any inappropriate content labels were detected
+                    // or if any faces were detected
                     if (!empty($labels)) {
                         // Handle the detection of inappropriate content
                         // For example, reject the upload or flag for manual review
                         // in this case: save generic 'removed_image_fallback' instead of user uploaded file
                         Arr::set($validated, 'images.' . $key, 'https://soundcollectbucket.s3.eu-central-1.amazonaws.com/users/image_filter_fallback/removed_image_fallback.png');
+                    } elseif (!empty($face_details)) {
+                        Arr::set($validated, 'images.' . $key, 'No human face should be visible on the picture.');
                     } else {
                         // store the image in the storage
                         $url_images = Storage::put($folder, $image, 'public');
@@ -126,6 +140,42 @@ class ObservationController extends Controller
                 // return false;
             }
 
+            // call to sightengine API to check if text containes any inappropriate content
+            try {
+                $inappropriate_text_paramaters = array(
+                    'text' => $validated['protection'],
+                    'lang' => 'en,es',
+                    'models' => 'general',
+                    'mode' => 'ml',
+                    'api_user' => env('SIGHTENGINE_API_USER'),
+                    'api_secret' => env('SIGHTENGINE_API_SECRET'),
+                );
+
+                // this example uses cURL
+                $check_text = curl_init('https://api.sightengine.com/1.0/text/check.json');
+                curl_setopt($check_text, CURLOPT_POST, true);
+                curl_setopt($check_text, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($check_text, CURLOPT_POSTFIELDS, $inappropriate_text_paramaters);
+                $response_text_check = curl_exec($check_text);
+                curl_close($check_text);
+
+                $output_text_modification = json_decode($response_text_check, true);
+
+                // check if the response is successful
+                if ($output_text_modification['status'] === 'success') {
+
+                    //  check if received response contains any inappropriate content
+                    if ($output_text_modification['moderation_classes']['sexual'] || $output_text_modification['moderation_classes']['discriminatory'] || $output_text_modification['moderation_classes']['insulting'] || $output_text_modification['moderation_classes']['violent'] || $output_text_modification['moderation_classes']['toxic'] || $output_text_modification['moderation_classes']['self-harm'] > 0) {
+
+                        // modify user input and replace it with generic message
+                        Arr::set($validated, 'protection', 'User provided text modified for inappropriate content.');
+                    } else {
+                        // Arr::set($validated, 'protection', '$output_text_modification[moderation_classes][sexual] is.' . $output_text_modification['moderation_classes']['sexual']);
+                    }
+                }
+            } catch (\Throwable $th) {
+                // Arr::set($validated, 'protection', 'error when calling curl language filter: ' . $th);
+            }
 
             // make http call to timezone api on this url http://api.timezonedb.com/v2.1/get-time-zone?key=YOUR_API_KEY&format=json&by=position&lat=40.689247&lng=-74.044502
             // to get the timezone of the user and then convert the time to the user's local time
@@ -233,5 +283,50 @@ class ObservationController extends Controller
         );
 
         return ObservationResource::collection($observationsFiltered);
+    }
+
+    public function downloadAsCsv()
+    {
+        try {
+            //code...
+
+            // Fetch observations from the database
+            // $observations = DB::table('observations')->get();
+            $observations = ObservationResource::collection(Observation::all());
+
+            // Convert observations to CSV format
+            $csvContent = "Observation_id,LAeq,Longitude,Latitude\n"; // Example CSV header
+            foreach ($observations as $observation) {
+                $csvContent .= "{$observation->id},{$observation->Leq},{$observation->longitude},{$observation->latitude}\n";
+            }
+
+            return response($csvContent)
+                ->header('Content-Type', 'text/csv')
+                ->header('Content-Disposition', 'attachment; filename="observations.csv"');
+        } catch (\Throwable $th) {
+            // return $this->error('error when downloading csv is '. $th);
+        }
+    }
+
+    public function downloadAsGpkg()
+    {
+        try {
+            //code...
+            // Fetch observations from the database
+            // $observations = DB::table('observations')->get();
+            $observations = ObservationResource::collection(Observation::all());
+
+            // Convert observations to GPKG format
+            // This step is highly dependent on your data and how you plan to convert it to GPKG.
+            // You might use a geospatial library or a custom conversion function.
+            $gpkgContent = convertObservationsToGpkg($observations);
+
+            // Assuming convertObservationsToGpkg() returns the GPKG file content
+            return response($gpkgContent)
+                ->header('Content-Type', 'application/geopackage+sqlite3')
+                ->header('Content-Disposition', 'attachment; filename="observations.gpkg"');
+        } catch (\Throwable $th) {
+            return $this->error('error when downloading gpkg is '. $th);
+        }
     }
 }
