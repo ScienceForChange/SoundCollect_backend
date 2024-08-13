@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('description')->nullable();
             $table->string('conclusion')->nullable();
+            $table->geometry('coordinates', subtype: 'polygon');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->boolean('deleted')->default(false);

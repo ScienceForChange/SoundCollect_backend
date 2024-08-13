@@ -8,6 +8,7 @@ use App\Http\Controllers\ObservationController;
 use App\Http\Controllers\SFCController;
 use App\Http\Controllers\MapController;
 use App\Http\Resources\UserResource;
+use App\Http\Controllers\StudyZoneController;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\PolylineObservationController;
 
@@ -99,3 +100,6 @@ Route::get('/user/observations', [ObservationController::class, 'userObservation
 Route::post('/user/autocalibration', \App\Http\Controllers\AutocalibrationController::class)->middleware(['auth:sanctum'])->name('autocalibration.update');
 
 Route::get('/polyline_observations', [PolylineObservationController::class, 'index'])->name('polyline_observations');
+
+//adminPanel
+Route::middleware(['auth:sanctum'])->post('/study-zone', [StudyZoneController::class, 'store'])->name('study-zone.store');
