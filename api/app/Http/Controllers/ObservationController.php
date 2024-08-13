@@ -16,6 +16,8 @@ use App\Enums\Observation\PolygonQuery;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Support\Facades\Http;
 use Throwable;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class ObservationController extends Controller
 {
@@ -164,4 +166,53 @@ class ObservationController extends Controller
 
         return ObservationResource::collection($observationsFiltered);
     }
+
+    public function geopackage(Request $request)
+    {
+
+        // Ruta del archivo GPKG a crear
+        $outputPath = storage_path('app/public/observations.gpkg');
+
+        // Obtener geojson
+        $geojson = $request->geojson['features'];
+
+        // Convertir a JSON
+        $jsonContent = json_encode(['type' => 'FeatureCollection', 'features' => $geojson], JSON_PRETTY_PRINT);
+
+        // Guardar en archivo
+        $geojsonPath = storage_path('app/public/observacions.geojson');
+        file_put_contents($geojsonPath, $jsonContent);
+
+        // Comando para convertir archivo JSON a GPKG
+        $command = "ogr2ogr -f 'GPKG' $outputPath $geojsonPath";
+        shell_exec($command);
+
+        return response()->download($outputPath);
+
+    }
+
+    public function KeyholeMarkupLanguage(Request $request)
+    {
+
+        // Ruta del archivo KML a crear
+        $outputPath = storage_path('app/public/observations.kml');
+
+        // Obtener geojson
+        $geojson = $request->geojson['features'];
+
+        // Convertir a JSON
+        $jsonContent = json_encode(['type' => 'FeatureCollection', 'features' => $geojson], JSON_PRETTY_PRINT);
+
+        // Guardar en archivo
+        $geojsonPath = storage_path('app/public/observacions.geojson');
+        file_put_contents($geojsonPath, $jsonContent);
+
+        // Comando para convertir archivo JSON a KML
+        $command = "ogr2ogr -f 'KML' $outputPath $geojsonPath";
+        shell_exec($command);
+
+        return response()->download($outputPath);
+
+    }
+
 }

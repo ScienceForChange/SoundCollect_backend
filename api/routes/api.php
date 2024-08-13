@@ -99,3 +99,6 @@ Route::get('/user/observations', [ObservationController::class, 'userObservation
 Route::post('/user/autocalibration', \App\Http\Controllers\AutocalibrationController::class)->middleware(['auth:sanctum'])->name('autocalibration.update');
 
 Route::get('/polyline_observations', [PolylineObservationController::class, 'index'])->name('polyline_observations');
+
+Route::post('/geopackage', [ObservationController::class, 'geopackage'])->name('geopackage');
+Route::post('/kml', [ObservationController::class, 'KeyholeMarkupLanguage'])->name('kml');
