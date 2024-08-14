@@ -44,7 +44,19 @@ class StoreStudyZoneRequest extends FormRequest
             'coordinates.*' => ['required', 'string'],
             'start_date' => 'required|date',
             'end_date' => 'required|date',
-            'deleted' => 'boolean',
+
+            'collaborators' => ['array'],
+            'collaborators.*.collaborator_name' => ['required', 'string'],
+            //'collaborators.*.logo' => ['file', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
+            'collaborators.*.contact_name' => ['required', 'string'],
+            'collaborators.*.contact_email' => ['required', 'email'],
+            'collaborators.*.contact_phone' => ['required', 'string'],
+
+            'documents' => ['array'],
+            'documents.*.name' => ['required', 'string'],
+            //'documents.*.document' => ['file'],
+            //'documents.*.type' => ['string'],
+
         ];
     }
 }

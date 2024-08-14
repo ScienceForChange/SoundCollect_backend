@@ -16,7 +16,7 @@ class StudyZoneResource extends JsonResource
         }
 
         return [
-            // 'id' => $this->id,
+            'id' => $this->id,
             'user_id' => $this->user_id,
             'name' => $this->name,
             'description' => $this->description,
@@ -24,8 +24,12 @@ class StudyZoneResource extends JsonResource
             'coordinates' => $this->coordinates,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
-            'deleted' => $this->deleted,
+            'relationships' => [
+                'user' => $this->user,
+                'documents' => $this->documents,
+                'collaborators' => $this->collaborators,
+            ],
         ];
     }
-    
+
 }

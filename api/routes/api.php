@@ -102,4 +102,21 @@ Route::post('/user/autocalibration', \App\Http\Controllers\AutocalibrationContro
 Route::get('/polyline_observations', [PolylineObservationController::class, 'index'])->name('polyline_observations');
 
 //adminPanel
-Route::middleware(['auth:sanctum'])->post('/study-zone', [StudyZoneController::class, 'store'])->name('study-zone.store');
+Route::middleware(['auth:sanctum'])
+    ->prefix('admin-panel')
+    ->group(function () {
+
+
+        Route::prefix('study-zone')
+            ->group(function (){
+                Route::post('/', [StudyZoneController::class, 'store'])->name('study-zone.store');
+                Route::get('/', [StudyZoneController::class, 'index'])->name('study-zone.index');
+                Route::get('/{studyZone}', [StudyZoneController::class, 'show'])->name('study-zone.show');
+                Route::patch('/{studyZone}', [StudyZoneController::class, 'update'])->name('study-zone.update');
+                Route::delete('/{studyZone}', [StudyZoneController::class, 'destroy'])->name('study-zone.destroy');
+            });
+
+
+    });
+
+
