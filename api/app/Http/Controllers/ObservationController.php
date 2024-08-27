@@ -285,14 +285,33 @@ class ObservationController extends Controller
         return ObservationResource::collection($observationsFiltered);
     }
 
-    public function downloadAsCsv()
+    public function downloadAsCsv(Request $request, PointInPolygonService $pointInPolygonService)
     {
         try {
-            //code...
+
+            // $request->polygon = ["2.0214844 41.545589", "1.8292236 41.1538424", "2.4581909 41.2798705", "2.0214844 41.545589"];
+
+            $request->polygon = explode(',', $request->polygon);
+
+            // return ($request->polygon);
+
+            // We use whereTime to filter the observations that are within the TIME interval (we do not care about the date)
+            $observations = Observation::whereBetween('Leq', [20, 80])->get();
+
+            $observationsFiltered = $observations->filter(
+                fn ($observation) =>
+                // We use the pointInPolygon method to filter the observations that are within the polygon, passing string, array args and comparing the result with the concern requested
+                $this->pointInPolygon(
+                    sprintf("%s %s", $observation->longitude,  $observation->latitude),
+                    $request->polygon
+                ) === 'inside'
+            );
+
+            $observations = ObservationResource::collection($observationsFiltered);
 
             // Fetch observations from the database
             // $observations = DB::table('observations')->get();
-            $observations = ObservationResource::collection(Observation::all());
+            // $observations = ObservationResource::collection(Observation::all());
 
             // Convert observations to CSV format
             $csvContent = "Observation_id,LAeq,Longitude,Latitude\n"; // Example CSV header
@@ -304,29 +323,71 @@ class ObservationController extends Controller
                 ->header('Content-Type', 'text/csv')
                 ->header('Content-Disposition', 'attachment; filename="observations.csv"');
         } catch (\Throwable $th) {
-            // return $this->error('error when downloading csv is '. $th);
+            return $this->error('error when downloading csv is ' . $th);
         }
     }
 
-    public function downloadAsGpkg()
+    var $pointOnVertex = true; // Check if the point sits exactly on one of the vertices?
+
+    function pointInPolygon($point, $polygon, $pointOnVertex = true)
     {
-        try {
-            //code...
-            // Fetch observations from the database
-            // $observations = DB::table('observations')->get();
-            $observations = ObservationResource::collection(Observation::all());
+        $this->pointOnVertex = $pointOnVertex;
 
-            // Convert observations to GPKG format
-            // This step is highly dependent on your data and how you plan to convert it to GPKG.
-            // You might use a geospatial library or a custom conversion function.
-            $gpkgContent = convertObservationsToGpkg($observations);
+        // Transform string coordinates into arrays with x and y values
+        $point = $this->pointStringToCoordinates($point);
 
-            // Assuming convertObservationsToGpkg() returns the GPKG file content
-            return response($gpkgContent)
-                ->header('Content-Type', 'application/geopackage+sqlite3')
-                ->header('Content-Disposition', 'attachment; filename="observations.gpkg"');
-        } catch (\Throwable $th) {
-            return $this->error('error when downloading gpkg is '. $th);
+        $vertices = array();
+        foreach ($polygon as $vertex) {
+            $vertices[] = $this->pointStringToCoordinates($vertex);
         }
+
+        // Check if the point sits exactly on a vertex
+        if ($this->pointOnVertex == true and $this->pointOnVertex($point, $vertices) == true) {
+            return "vertex";
+        }
+
+        // Check if the point is inside the polygon or on the boundary
+        $intersections = 0;
+        $vertices_count = count($vertices);
+
+        for ($i = 1; $i < $vertices_count; $i++) {
+            $vertex1 = $vertices[$i - 1];
+            $vertex2 = $vertices[$i];
+            if ($vertex1['y'] == $vertex2['y'] and $vertex1['y'] == $point['y'] and $point['x'] > min($vertex1['x'], $vertex2['x']) and $point['x'] < max($vertex1['x'], $vertex2['x'])) { // Check if point is on an horizontal polygon boundary
+                return "boundary";
+            }
+            if ($point['y'] > min($vertex1['y'], $vertex2['y']) and $point['y'] <= max($vertex1['y'], $vertex2['y']) and $point['x'] <= max($vertex1['x'], $vertex2['x']) and $vertex1['y'] != $vertex2['y']) {
+
+                $xinters = (int)(($point['y'] - (int)$vertex1['y']) * ((int)$vertex2['x'] - (int)$vertex1['x']) / ((int)$vertex2['y'] - (int)$vertex1['y']) + (int)$vertex1['x']);
+
+                if ($xinters == $point['x']) { // Check if point is on the polygon boundary (other than horizontal)
+                    return "boundary";
+                }
+                if ($vertex1['x'] == $vertex2['x'] || $point['x'] <= $xinters) {
+                    $intersections++;
+                }
+            }
+        }
+        // If the number of edges we passed through is odd, then it's in the polygon. 
+        if ($intersections % 2 != 0) {
+            return "inside";
+        } else {
+            return "outside";
+        }
+    }
+
+    function pointOnVertex($point, $vertices)
+    {
+        foreach ($vertices as $vertex) {
+            if ($point == $vertex) {
+                return true;
+            }
+        }
+    }
+
+    function pointStringToCoordinates($pointString)
+    {
+        $coordinates = explode(" ", $pointString);
+        return array("x" => $coordinates[0], "y" => $coordinates[1]);
     }
 }
