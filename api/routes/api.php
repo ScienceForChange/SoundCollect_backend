@@ -8,6 +8,7 @@ use App\Http\Controllers\ObservationController;
 use App\Http\Controllers\SFCController;
 use App\Http\Controllers\MapController;
 use App\Http\Resources\UserResource;
+use App\Http\Controllers\StudyZoneController;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\PolylineObservationController;
 
@@ -99,3 +100,31 @@ Route::get('/user/observations', [ObservationController::class, 'userObservation
 Route::post('/user/autocalibration', \App\Http\Controllers\AutocalibrationController::class)->middleware(['auth:sanctum'])->name('autocalibration.update');
 
 Route::get('/polyline_observations', [PolylineObservationController::class, 'index'])->name('polyline_observations');
+
+
+//adminPanel
+Route::middleware(['auth:sanctum'])
+    ->prefix('admin-panel')
+    ->group(function () {
+
+
+        Route::prefix('study-zone')
+            ->group(function (){
+                Route::post('/', [StudyZoneController::class, 'store'])->name('study-zone.store');
+                Route::get('/', [StudyZoneController::class, 'index'])->name('study-zone.index');
+                Route::get('/{studyZone}', [StudyZoneController::class, 'show'])->name('study-zone.show');
+                Route::patch('/{studyZone}', [StudyZoneController::class, 'update'])->name('study-zone.update');
+                Route::delete('/{studyZone}', [StudyZoneController::class, 'destroy'])->name('study-zone.destroy');
+            });
+
+
+    });
+
+Route::post('/geopackage', [ObservationController::class, 'geopackage'])->name('geopackage');
+Route::post('/kml', [ObservationController::class, 'KeyholeMarkupLanguage'])->name('kml');
+
+// add delete account page for google play store, that returns simple text response
+Route::get('/delete-account', function () {
+    return ('You can delete your account from the application itselft  "Proflie" -> "Delete account" OR send bearer token to this URL "soundcollectapp.com/api/user/profile/delete" form authenticated user to remove your account.');
+})->name('delete-account');
+

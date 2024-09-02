@@ -27,6 +27,13 @@
       0 => 'Laravel\\Tinker\\TinkerServiceProvider',
     ),
   ),
+  'matanyadaev/laravel-eloquent-spatial' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'MatanYadaev\\EloquentSpatial\\EloquentSpatialServiceProvider',
+    ),
+  ),
   'nesbot/carbon' => 
   array (
     'providers' => 

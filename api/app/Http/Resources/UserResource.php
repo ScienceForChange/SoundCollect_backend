@@ -32,6 +32,7 @@ class UserResource extends JsonResource
                 'calibration_method_id' => $this->calibration_method_id,
                 'created_at' => $this->created_at->format('Y-m-d H:i:s'),
                 'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
+                'autocalibration' => $this->autocalibration,
             ],
             'relationships' => [
                 'observations' => ObservationResource::collection($this->whenLoaded('observations')),

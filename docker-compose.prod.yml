@@ -5,6 +5,8 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt/:ro
       - ./certbot/www/:/var/www/certbot/:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
     ports:
       - "80:80"
@@ -71,6 +73,10 @@ services:
     restart: unless-stopped
     depends_on:
       - api
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    
 
   mysql:
     image: carlossfc/soundcollect-mysql:${IMAGE_TAG}
@@ -79,6 +85,8 @@ services:
       - type: volume
         source: mysqldata
         target: /var/lib/mysql
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
 
