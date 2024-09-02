@@ -31,6 +31,10 @@ class SegmentResource extends JsonResource
             "freq_3" => $this->freq_3,
             "spec_3" => $this->spec_3,
             "spec_3_dB" => $this->spec_3_dB,
+            'fluctuation' => $this->fluctuation,
+            'sharpness' => $this->sharpness,
+            'loudness' => $this->loudness,
+            'roughness' => $this->roughness
         ];
     }
 }

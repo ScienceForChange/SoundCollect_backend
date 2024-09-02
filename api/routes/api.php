@@ -120,3 +120,12 @@ Route::middleware(['auth:sanctum'])
     });
 
 
+
+Route::get('/download_observations', [ObservationController::class, 'downloadAsCsv'])->name('download');
+
+Route::get('/download_observations_gpkg', [ObservationController::class, 'downloadAsGpkg'])->name('download.gpkg');
+
+// add delete account page for google play store, that returns simple text response
+Route::get('/delete-account', function () {
+    return ('You can delete your account from the application itselft  "Proflie" -> "Delete account" OR send bearer token to this URL "soundcollectapp.com/api/user/profile/delete" form authenticated user to remove your account.');
+})->name('delete-account');

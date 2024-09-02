@@ -35,7 +35,11 @@ class Segment extends Model
         'LAeqT',
         'freq_3',
         'spec_3',
-        'spec_3_dB'
+        'spec_3_dB',
+        'fluctuation',
+        'sharpness',
+        'loudness', 
+        'roughness'
     ];
 
     protected $casts = [
