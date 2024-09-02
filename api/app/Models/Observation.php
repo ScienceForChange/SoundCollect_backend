@@ -63,7 +63,8 @@ class Observation extends Model
         'monotonous',
         'overall',
         'user_id',
-        'path'
+        'path',
+        'user_local_time',
     ];
 
     protected $casts = [

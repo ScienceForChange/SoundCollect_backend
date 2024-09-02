@@ -25,6 +25,7 @@ class MapObservationResource extends JsonResource
             'longitude' => $this->longitude,
             'path' => $this->path,
             'Leq' => $this->Leq,
+            'segments' => SegmentResource::collection($this->segments),
         ];
     }
 }

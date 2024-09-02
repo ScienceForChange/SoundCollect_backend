@@ -21,9 +21,11 @@ class StudyZoneResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'conclusion' => $this->conclusion,
-            'coordinates' => $this->coordinates,
+            'boundaries' => $this->coordinates,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
             'relationships' => [
                 'user' => $this->user,
                 'documents' => $this->documents,
