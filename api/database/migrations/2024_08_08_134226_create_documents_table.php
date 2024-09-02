@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('documents_study_zones', function (Blueprint $table) {
+        Schema::create('documents', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('study_zone_id');
-            
+
             $table->string('name');
+            $table->string('file');
             $table->string('type');
 
             $table->timestamps();

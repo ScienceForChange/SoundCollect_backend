@@ -11,15 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('collaborators_study_zones', function (Blueprint $table) {
+        Schema::create('collaborators', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('study_zone_id');
 
             $table->string('collaborator_name');
-            $table->string('logo')->nuleable();
-            $table->string('contact_name')->nuleable();
-            $table->string('contact_email')->nuleable();
-            $table->string('contact_phone')->nuleable();
+            $table->string('collaborator_web')->nullable()->default(NULL);
+            $table->string('logo')->nullable()->default(NULL);
+            $table->string('contact_name')->nullable()->default(NULL);
+            $table->string('contact_email')->nullable()->default(NULL);
+            $table->string('contact_phone')->nullable()->default(NULL);
 
             $table->timestamps();
 

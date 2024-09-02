@@ -15,11 +15,17 @@ class DeleteUserController
 
         $user->otp()->delete();
 
-        $user->delete();
+        // $user->delete();
+        
+        // change user email to unique email
+        $user->email = 'deleted_' . rand(1, 1000000) . '_' . $user->email;
+
+        // save changes
+        $user->save();
 
         return $this->success(
             [
-                'message' => 'User deleted successfully',
+                'message' => 'User no longer active.',
             ],
             Response::HTTP_OK
         );

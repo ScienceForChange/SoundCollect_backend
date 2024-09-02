@@ -16,12 +16,14 @@ return new class extends Migration
             $table->uuid('user_id');
 
             $table->string('name');
-            $table->string('description')->nullable();
-            $table->string('conclusion')->nullable();
+            $table->string('description')->nullable()->default(NULL);
+            $table->string('conclusion')->nullable()->default(NULL);
+            $table->geometry('coordinates');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
-            $table->boolean('deleted')->default(false);
+
             $table->timestamps();
+            $table->softDeletes();
 
             $table->foreign('user_id')->references('id')->on('users')->onUpdate('cascade');
         });
