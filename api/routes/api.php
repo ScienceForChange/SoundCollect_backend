@@ -101,6 +101,7 @@ Route::post('/user/autocalibration', \App\Http\Controllers\AutocalibrationContro
 
 Route::get('/polyline_observations', [PolylineObservationController::class, 'index'])->name('polyline_observations');
 
+
 //adminPanel
 Route::middleware(['auth:sanctum'])
     ->prefix('admin-panel')
@@ -119,13 +120,11 @@ Route::middleware(['auth:sanctum'])
 
     });
 
-
-
-Route::get('/download_observations', [ObservationController::class, 'downloadAsCsv'])->name('download');
-
-Route::get('/download_observations_gpkg', [ObservationController::class, 'downloadAsGpkg'])->name('download.gpkg');
+Route::post('/geopackage', [ObservationController::class, 'geopackage'])->name('geopackage');
+Route::post('/kml', [ObservationController::class, 'KeyholeMarkupLanguage'])->name('kml');
 
 // add delete account page for google play store, that returns simple text response
 Route::get('/delete-account', function () {
     return ('You can delete your account from the application itselft  "Proflie" -> "Delete account" OR send bearer token to this URL "soundcollectapp.com/api/user/profile/delete" form authenticated user to remove your account.');
 })->name('delete-account');
+
