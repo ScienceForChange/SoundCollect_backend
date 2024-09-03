@@ -115,6 +115,7 @@ Route::middleware(['auth:sanctum'])
                 Route::get('/{studyZone}', [StudyZoneController::class, 'show'])->name('study-zone.show');
                 Route::patch('/{studyZone}', [StudyZoneController::class, 'update'])->name('study-zone.update');
                 Route::delete('/{studyZone}', [StudyZoneController::class, 'destroy'])->name('study-zone.destroy');
+                Route::patch('/{studyZone}/toggle', [StudyZoneController::class, 'toggleVisibility'])->name('study-zone.toggle-visibility');
             });
 
 

@@ -201,4 +201,30 @@ class StudyZoneController extends Controller
             Response::HTTP_OK
         );
     }
+
+    // Método para ocultar o mostrar una zona de estudio
+    public function toggleVisibility(StudyZone $studyZone, Request $request)
+    {
+        if (!$studyZone) {
+            return response()->json(['error' => 'Zona de estudio no encontrada'], 404);
+        }
+
+        if (isset($request->is_visible)) {
+            $studyZone->is_visible = $request->is_visible;
+        }
+        else if (!isset($request->is_visible)) {
+            $studyZone->is_visible = !$studyZone->is_visible;
+        }
+        else {
+            return response()->json(['error' => 'Acción no válida'], 400);
+        }
+
+        // Guarda el cambio
+        $studyZone->save();
+
+         return $this->success(
+            $studyZone->id,
+            Response::HTTP_OK
+        );
+    }
 }
