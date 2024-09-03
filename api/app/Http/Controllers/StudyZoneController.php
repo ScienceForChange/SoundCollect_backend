@@ -8,6 +8,7 @@ use Illuminate\Http\Response;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use MatanYadaev\EloquentSpatial\Objects\Polygon;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\Point;
@@ -18,6 +19,7 @@ use App\Http\Requests\UpdateStudyZoneRequest;
 use App\Http\Resources\StudyZoneResource;
 use App\Services\PointInPolygonService;
 use App\Enums\Observation\PolygonQuery;
+use Illuminate\Support\Facades\File;
 use Throwable;
 
 class StudyZoneController extends Controller
@@ -78,11 +80,20 @@ class StudyZoneController extends Controller
         // Guardamos los colaboradores
         $collaborators = $request->collaborators;
         foreach ($collaborators as $key => $collaborator) {
-            $extension =  explode(';', explode('/', $collaborator['logo'])[1])[0];
-            $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$collaborator['logo']));
-            $fileName = uniqid().date('Ymdhis').'.'. $extension;
-            if (file_put_contents(storage_path('app/public/collaborators/logos/' . $fileName), $fileData)){
-                $collaborators[$key]['logo'] = $fileName;
+            if (isset($collaborator['logo']) && $collaborator['logo'] !== null){
+                $extension =  explode(';', explode('/', $collaborator['logo'])[1])[0];
+                $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$collaborator['logo']));
+
+                $path = storage_path('app/public/collaborators/logos/' . $studyZone->id);
+                if (!File::exists($path)) {
+                    File::makeDirectory($path, 0777, true);
+                }
+
+                $fileName = uniqid().date('Ymdhis').'.'. $extension;
+                if (file_put_contents($path . '/' . $fileName, $fileData)){
+                    $collaborators[$key]['logo'] = $fileName;
+                }
+
             }
         }
         $studyZone->collaborators()->createMany(
@@ -90,19 +101,29 @@ class StudyZoneController extends Controller
         );
 
         // Guardamos los documentos
-        $documents = $request->documents;
-        foreach ($documents as $key => $document) {
-            $extension =  explode(';', explode('/', $document['file'])[1])[0];
-            $fileData = base64_decode(preg_replace('#^data:application/\w+;base64,#i', '',$document['file']));
-            $fileName = uniqid().date('Ymdhis').'.'. $extension;
-            if (file_put_contents(storage_path('app/public/collaborators/documents/' . $fileName), $fileData)){
-                $documents[$key]['file'] = $fileName;
-                $documents[$key]['type'] = $extension;
+        if ($request->documents && count($request->documents) > 0){
+            $documents = $request->documents;
+            foreach ($documents as $key => $document) {
+                $extension =  explode(';', explode('/', $document['file'])[1])[0];
+                $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$document['file']));
+
+                $path = storage_path('app/public/collaborators/documents/' . $studyZone->id);
+                // Creamos el directorio si no existe
+                if (!File::exists($path)) {
+                    File::makeDirectory($path, 0755, true);
+                }
+
+                // Comprobamos si el archivo ya existe y si es así le añadimos la fecha y hora actual
+                $fileName = File::exists($path . '/' . Str::slug($document['name']).'.'. $extension ) ? Str::slug($document['name']) . '-' . date('Ymdhis') . '.' . $extension : Str::slug($document['name']) . '.' . $extension;
+                if (file_put_contents($path . '/' . $fileName, $fileData)){
+                    $documents[$key]['file'] = $fileName;
+                    $documents[$key]['type'] = $extension;
+                }
             }
+            $studyZone->documents()->createMany(
+                $documents
+            );
         }
-        $studyZone->documents()->createMany(
-            $documents
-        );
 
         return $this->success(
             new StudyZoneResource($studyZone),
