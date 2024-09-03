@@ -169,6 +169,10 @@ jobs:
 
             sed -i '/AWS_ACCESS_KEY_ID/c\AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}' /usr/src/.env
             sed -i '/AWS_SECRET_ACCESS_KEY/c\AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}' /usr/src/.env
+            
+            sed -i '/SIGHTENGINE_API_USER/c\SIGHTENGINE_API_USER=${{ secrets.SIGHTENGINE_API_USER }}' /usr/src/.env
+            sed -i '/SIGHTENGINE_API_SECRET/c\SIGHTENGINE_API_SECRET=${{ secrets.SIGHTENGINE_API_SECRET }}' /usr/src/.env
+
             sed -i '/OPENWEATHER_API_KEY/c\OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }}' /usr/src/.env"
 
           ssh -tt -o StrictHostKeyChecking=no -i ./id_rsa ${{ secrets.SSH_CONNECTION_PROD }} "/home/ubuntu/deploy.sh"
