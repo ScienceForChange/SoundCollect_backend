@@ -84,18 +84,20 @@ class StudyZoneController extends Controller
                 $extension =  explode(';', explode('/', $collaborator['logo'])[1])[0];
                 $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$collaborator['logo']));
 
-                $path = storage_path('app/public/collaborators/logos/' . $studyZone->id);
-                if (!File::exists($path)) {
-                    File::makeDirectory($path, 0777, true);
+                $fileName = uniqid() . '.' . $extension;
+
+                $path = 'studyzone/' . $studyZone->id . '/collaborators-logos/' . $fileName;
+
+                if(Storage::exists($path)){
+                    Storage::delete($path);
                 }
 
-                $fileName = uniqid().date('Ymdhis').'.'. $extension;
-                if (file_put_contents($path . '/' . $fileName, $fileData)){
+                if(Storage::put($path, $fileData, 'public')){
                     $collaborators[$key]['logo'] = $fileName;
                 }
-
             }
         }
+
         $studyZone->collaborators()->createMany(
             $collaborators
         );
@@ -107,18 +109,18 @@ class StudyZoneController extends Controller
                 $extension =  explode(';', explode('/', $document['file'])[1])[0];
                 $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$document['file']));
 
-                $path = storage_path('app/public/collaborators/documents/' . $studyZone->id);
-                // Creamos el directorio si no existe
-                if (!File::exists($path)) {
-                    File::makeDirectory($path, 0755, true);
-                }
+                $path = 'studyzone/' . $studyZone->id . '/documents';
 
                 // Comprobamos si el archivo ya existe y si es así le añadimos la fecha y hora actual
-                $fileName = File::exists($path . '/' . Str::slug($document['name']).'.'. $extension ) ? Str::slug($document['name']) . '-' . date('Ymdhis') . '.' . $extension : Str::slug($document['name']) . '.' . $extension;
-                if (file_put_contents($path . '/' . $fileName, $fileData)){
+                $fileName = Storage::exists($path . '/' . Str::slug($document['name']).'.'. $extension ) ? Str::slug($document['name']) . '-' . date('Ymdhis') . '.' . $extension : Str::slug($document['name']) . '.' . $extension;
+
+                $path = 'studyzone/' . $studyZone->id . '/documents/' . $fileName;
+                
+                if(Storage::put($path, $fileData, 'public')){
                     $documents[$key]['file'] = $fileName;
                     $documents[$key]['type'] = $extension;
                 }
+
             }
             $studyZone->documents()->createMany(
                 $documents
