@@ -54,6 +54,7 @@ class StudyZoneController extends Controller
      */
     public function store(StoreStudyZoneRequest $request)
     {
+        $domain = env('AWS_URL');
 
         $validated = $request->validated();
 
@@ -93,7 +94,7 @@ class StudyZoneController extends Controller
                 }
 
                 if(Storage::put($path, $fileData, 'public')){
-                    $collaborators[$key]['logo'] = $fileName;
+                    $collaborators[$key]['logo'] = $domain . $path;
                 }
             }
         }
@@ -106,6 +107,7 @@ class StudyZoneController extends Controller
         if ($request->documents && count($request->documents) > 0){
             $documents = $request->documents;
             foreach ($documents as $key => $document) {
+
                 $extension =  explode(';', explode('/', $document['file'])[1])[0];
                 $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$document['file']));
 
@@ -115,9 +117,9 @@ class StudyZoneController extends Controller
                 $fileName = Storage::exists($path . '/' . Str::slug($document['name']).'.'. $extension ) ? Str::slug($document['name']) . '-' . date('Ymdhis') . '.' . $extension : Str::slug($document['name']) . '.' . $extension;
 
                 $path = 'studyzone/' . $studyZone->id . '/documents/' . $fileName;
-                
+
                 if(Storage::put($path, $fileData, 'public')){
-                    $documents[$key]['file'] = $fileName;
+                    $documents[$key]['file'] = $domain . $path;
                     $documents[$key]['type'] = $extension;
                 }
 
