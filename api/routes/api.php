@@ -102,25 +102,64 @@ Route::post('/user/autocalibration', \App\Http\Controllers\AutocalibrationContro
 Route::get('/polyline_observations', [PolylineObservationController::class, 'index'])->name('polyline_observations');
 
 
-//adminPanel
-Route::middleware(['auth:sanctum'])
-    ->prefix('admin-panel')
+
+Route::post('/dashboard/logout', \App\Http\Controllers\Auth\LogoutController::class)
+->middleware(['auth:sanctum'])
+->name('logout');
+
+//dashboard
+Route::prefix('dashboard')
+    ->name('dashboard.')
     ->group(function () {
 
+        Route::post('/register', \App\Http\Controllers\Auth\RegisteredUserController::class)
+            ->name('register');
 
-        Route::prefix('study-zone')
-            ->group(function (){
-                Route::post('/', [StudyZoneController::class, 'store'])->name('study-zone.store');
-                Route::get('/', [StudyZoneController::class, 'index'])->name('study-zone.index');
-                Route::get('/{studyZone}', [StudyZoneController::class, 'show'])->name('study-zone.show');
-                Route::patch('/{studyZone}', [StudyZoneController::class, 'update'])->name('study-zone.update');
-                Route::delete('/{studyZone}', [StudyZoneController::class, 'destroy'])->name('study-zone.destroy');
-                Route::patch('/{studyZone}/toggle', [StudyZoneController::class, 'toggleVisibility'])->name('study-zone.toggle-visibility');
+        Route::post('/login', \App\Http\Controllers\Auth\LoginController::class)
+            ->name('login');
+
+        Route::post('/verify-email', \App\Http\Controllers\Auth\VerifyEmailController::class)
+            ->middleware(['throttle:6,1'])
+            ->name('verification.verify');
+
+        Route::post('/reset-password', \App\Http\Controllers\Auth\NewPasswordController::class)
+            ->middleware(['guest:sanctum'])
+            ->name('password.store');
+
+
+        Route::middleware(['auth:sanctum'])
+            ->group(function () {
+                Route::name('observations.')
+                    ->prefix('observations')
+                    ->group(function () {
+                    Route::get('/', [ObservationController::class, 'index'])->name('index');
+                    Route::get('/{observation}', [ObservationController::class, 'show'])->name('show');
+                    Route::post('/in-polygon', [ObservationController::class, 'polygonShow'])->name('map.show');
+                });
             });
 
 
-    });
+            
+        //adminPanel
+        Route::middleware(['auth:sanctum'])
+            ->name('admin-panel.')
+            ->prefix('admin-panel')
+            ->group(function () {
 
+                Route::prefix('study-zone')
+                    ->name('study-zone.')
+                    ->group(function (){
+                        Route::post('/', [StudyZoneController::class, 'store'])->name('store');
+                        Route::get('/', [StudyZoneController::class, 'index'])->name('index');
+                        Route::get('/{studyZone}', [StudyZoneController::class, 'show'])->name('show');
+                        Route::patch('/{studyZone}', [StudyZoneController::class, 'update'])->name('update');
+                        Route::delete('/{studyZone}', [StudyZoneController::class, 'destroy'])->name('destroy');
+                        Route::patch('/{studyZone}/toggle', [StudyZoneController::class, 'toggleVisibility'])->name('toggle-visibility');
+                    });
+
+
+            });
+    });
 Route::post('/geopackage', [ObservationController::class, 'geopackage'])->name('geopackage');
 Route::post('/kml', [ObservationController::class, 'KeyholeMarkupLanguage'])->name('kml');
 
