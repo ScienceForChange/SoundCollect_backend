@@ -59,15 +59,16 @@ class StudyZoneController extends Controller
         $validated = $request->validated();
 
         $polygon = new Polygon([
-                    new LineString(
-                        collect($request->coordinates)->map(function($coordinate) {
-                            // Separa cada punto en latitud y longitud
-                            list($longitude, $latitude) = explode(' ', $coordinate);
+            new LineString(
+                collect($request->coordinates)->map(function($coordinate) {
+                    // Separa cada punto en latitud y longitud
+                    list($longitude, $latitude) = explode(' ', $coordinate);
 
-                            return new Point((float)$longitude, (float)$latitude);
-                        })->all()
-                    )
-                ]);
+                    return new Point((float)$longitude, (float)$latitude);
+                })->all()
+            )
+        ]);
+
         $studyZone = StudyZone::create([
             'user_id' =>        auth()->user()->id,
             'name' =>           $request->name,
@@ -82,20 +83,7 @@ class StudyZoneController extends Controller
         $collaborators = $request->collaborators;
         foreach ($collaborators as $key => $collaborator) {
             if (isset($collaborator['logo_data']) && $collaborator['logo_data'] !== null){
-                $extension =  explode(';', explode('/', $collaborator['logo_data'])[1])[0];
-                $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$collaborator['logo_data']));
-
-                $fileName = uniqid() . '.' . $extension;
-
-                $path = 'studyzone/' . $studyZone->id . '/collaborators-logos/' . $fileName;
-
-                if(Storage::exists($path)){
-                    Storage::delete($path);
-                }
-
-                if(Storage::put($path, $fileData, 'public')){
-                    $collaborators[$key]['logo'] = $domain . $path;
-                }
+                $collaborators[$key]['logo'] = $this->uploadLogo($collaborator['logo_data'], $studyZone->id);
             }
         }
 
@@ -105,25 +93,15 @@ class StudyZoneController extends Controller
 
         // Guardamos los documentos
         if ($request->documents && count($request->documents) > 0){
+
             $documents = $request->documents;
+
             foreach ($documents as $key => $document) {
-
-                $extension =  explode(';', explode('/', $document['file_data'])[1])[0];
-                $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$document['file_data']));
-
-                $path = 'studyzone/' . $studyZone->id . '/documents';
-
-                // Comprobamos si el archivo ya existe y si es así le añadimos la fecha y hora actual
-                $fileName = Storage::exists($path . '/' . Str::slug($document['name']).'.'. $extension ) ? Str::slug($document['name']) . '-' . date('Ymdhis') . '.' . $extension : Str::slug($document['name']) . '.' . $extension;
-
-                $path = 'studyzone/' . $studyZone->id . '/documents/' . $fileName;
-
-                if(Storage::put($path, $fileData, 'public')){
-                    $documents[$key]['file'] = $domain . $path;
-                    $documents[$key]['type'] = $extension;
-                }
-
+                $docuemntUploaded = $this->uploadDocument($document['name'], $document['file_data'], $studyZone->id);
+                $documents[$key]['file'] = $docuemntUploaded['file'];
+                $documents[$key]['type'] = $docuemntUploaded['type'];
             }
+
             $studyZone->documents()->createMany(
                 $documents
             );
@@ -159,8 +137,6 @@ class StudyZoneController extends Controller
      */
     public function update(StoreStudyZoneRequest $request, StudyZone $studyZone)
     {
-        $domain = env('AWS_URL');
-
         $validated = $request->validated();
 
         $polygon = new Polygon([
@@ -185,6 +161,19 @@ class StudyZoneController extends Controller
         // Recopilar los IDs de los colaboradores presentes en el request
         $collaboratorIds = collect($request->input('collaborators'))->pluck('id');
 
+        // Eliminamos el logo de los colaboradores que no están en el request de Storage en caso de que exista
+        $collaboratorsToDelete = $studyZone->collaborators()->whereNotIn('id', $collaboratorIds)->get();
+        foreach ($collaboratorsToDelete as $collaborator) {
+            if($collaborator->logo !== null){
+                // Extraemos el dominio de AWS de la URL del logo
+                $domain         = env('AWS_URL');
+                $fileToDelete   = str_replace($domain, '', $collaborator->logo);
+                if(Storage::exists($fileToDelete)){
+                    Storage::delete($fileToDelete);
+                }
+            }
+        }
+
         // Eliminar colaboradores que no están en el request
         $studyZone->collaborators()->whereNotIn('id', $collaboratorIds)->delete();
 
@@ -192,36 +181,11 @@ class StudyZoneController extends Controller
         foreach ($request->input('collaborators') as $collaborator) {
             // si el colaborador no tiene ID y tiene logo_data, se guarda el logo
             if(!isset($collaborator['id']) && isset($collaborator['logo_data']) && $collaborator['logo_data'] !== null){
-                $extension =  explode(';', explode('/', $collaborator['logo_data'])[1])[0];
-                $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$collaborator['logo_data']));
-
-                $fileName = uniqid() . '.' . $extension;
-
-                $path = 'studyzone/' . $studyZone->id . '/collaborators-logos/' . $fileName;
-
-                if(Storage::exists($path)){
-                    Storage::delete($path);
-                }
-
-                if(Storage::put($path, $fileData, 'public')){
-                    $collaborator['logo'] = $domain . $path;
-                }
+                $collaborator['logo'] = $this->uploadLogo($collaborator['logo_data'], $studyZone->id);
             }
+            // Si el colaborador tiene un ID y el logo no es null, se guarda el logo
             else if(isset($collaborator['id']) && isset($collaborator['logo_data']) && $collaborator['logo_data'] !== null){
-                $extension =  explode(';', explode('/', $collaborator['logo_data'])[1])[0];
-                $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$collaborator['logo_data']));
-
-                $fileName = uniqid() . '.' . $extension;
-
-                $path = 'studyzone/' . $studyZone->id . '/collaborators-logos/' . $fileName;
-
-                if(Storage::exists($path)){
-                    Storage::delete($path);
-                }
-
-                if(Storage::put($path, $fileData, 'public')){
-                    $collaborator['logo'] = $domain . $path;
-                }
+                $collaborator['logo'] = $this->uploadLogo($collaborator['logo_data'], $studyZone->id);
             }
             // Si el colaborador tiene un ID y el logo es null, se elimina el logo
             else if(isset($collaborator['id']) && isset($collaborator['logo']) && $collaborator['logo'] === null){
@@ -238,6 +202,46 @@ class StudyZoneController extends Controller
                     'contact_email'     => $collaborator['contact_email'],
                     'contact_phone'     => $collaborator['contact_phone'],
                     'logo'              => isset($collaborator['logo']) ? $collaborator['logo'] : null,
+                ]
+            );
+        }
+
+        // Recopilar los IDs de los documentos presentes en el request
+        $documentIds = collect($request->input('documents'))->pluck('id');
+
+        // Eliminamos los documentos que no están en el request de Storage
+        $documentsToDelete = $studyZone->documents()->whereNotIn('id', $documentIds)->get();
+        foreach ($documentsToDelete as $document) {
+            // Extraemos el dominio de AWS de la URL del documento
+            $domain         = env('AWS_URL');
+            $fileToDelete   = str_replace($domain, '', $document->file);
+            if(Storage::exists($fileToDelete)){
+                Storage::delete($fileToDelete);
+            }
+        }
+
+        // Eliminar documentos que no están en el request
+        $studyZone->documents()->whereNotIn('id', $documentIds)->delete();
+
+        foreach ($request->input('documents') as $document) {
+            // si el documento no tiene ID y tiene file_data, se guarda el documento
+            if(!isset($document['id']) && isset($document['file_data']) && $document['file_data'] !== null){
+                $docuemntUploaded = $this->uploadDocument($document['name'], $document['file_data'], $studyZone->id);
+                $document['file'] = $docuemntUploaded['file'];
+                $document['type'] = $docuemntUploaded['type'];
+            }
+            // Si el documento tiene un ID y el file_data no es null, se guarda el documento
+            else if(isset($document['id']) && isset($document['file_data']) && $document['file_data'] !== null){
+                $docuemntUploaded = $this->uploadDocument($document['name'], $document['file_data'], $studyZone->id);
+                $document['file'] = $docuemntUploaded['file'];
+                $document['type'] = $docuemntUploaded['type'];
+            }
+            $studyZone->documents()->updateOrCreate(
+                ['id' => isset($document['id']) ? $document['id'] : null,],
+                [
+                    'name' => $document['name'],
+                    'file' => isset($document['file']) ? $document['file'] : null,
+                    'type' => isset($document['type']) ? $document['type'] : null,
                 ]
             );
         }
@@ -292,5 +296,43 @@ class StudyZoneController extends Controller
             $studyZone->id,
             Response::HTTP_OK
         );
+    }
+
+    // Método para subir el logo de un colaborador
+    private function uploadLogo($logoData, $studyZoneId)
+    {
+        $domain     = env('AWS_URL');
+        $extension  = explode(';', explode('/', $logoData)[1])[0];
+        $fileData   = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$logoData));
+        $fileName   = uniqid() . '.' . $extension;
+        $path       = 'studyzone/' . $studyZoneId . '/collaborators-logos/' . $fileName;
+
+        if(Storage::exists($path)){
+            Storage::delete($path);
+        }
+
+        if(Storage::put($path, $fileData, 'public')){
+            return $domain . $path;
+        }
+    }
+
+    // Método para subir un documento
+    private function uploadDocument($documentName, $documentData, $studyZoneId)
+    {
+        $domain     = env('AWS_URL');
+        $extension  = explode(';', explode('/', $documentData)[1])[0];
+        $fileData   = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$documentData));
+        $path       = 'studyzone/' . $studyZoneId . '/documents';
+        // Comprobamos si el archivo ya existe y si es así le añadimos la fecha y hora actual
+        $fileName   = Storage::exists($path . '/' . Str::slug($documentName).'.'. $extension ) ? Str::slug($documentName) . '-' . date('Ymdhis') . '.' . $extension : Str::slug($documentName) . '.' . $extension;
+        $path       = 'studyzone/' . $studyZoneId . '/documents/' . $fileName;
+
+        if(Storage::put($path, $fileData, 'public')){
+            return [
+                'file' => $domain . $path,
+                'type' => $extension
+            ];
+        }
+
     }
 }
