@@ -81,9 +81,9 @@ class StudyZoneController extends Controller
         // Guardamos los colaboradores
         $collaborators = $request->collaborators;
         foreach ($collaborators as $key => $collaborator) {
-            if (isset($collaborator['logo']) && $collaborator['logo'] !== null){
-                $extension =  explode(';', explode('/', $collaborator['logo'])[1])[0];
-                $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$collaborator['logo']));
+            if (isset($collaborator['logo_data']) && $collaborator['logo_data'] !== null){
+                $extension =  explode(';', explode('/', $collaborator['logo_data'])[1])[0];
+                $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$collaborator['logo_data']));
 
                 $fileName = uniqid() . '.' . $extension;
 
@@ -108,8 +108,8 @@ class StudyZoneController extends Controller
             $documents = $request->documents;
             foreach ($documents as $key => $document) {
 
-                $extension =  explode(';', explode('/', $document['file'])[1])[0];
-                $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$document['file']));
+                $extension =  explode(';', explode('/', $document['file_data'])[1])[0];
+                $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$document['file_data']));
 
                 $path = 'studyzone/' . $studyZone->id . '/documents';
 
@@ -159,6 +159,8 @@ class StudyZoneController extends Controller
      */
     public function update(StoreStudyZoneRequest $request, StudyZone $studyZone)
     {
+        $domain = env('AWS_URL');
+
         $validated = $request->validated();
 
         $polygon = new Polygon([
@@ -179,6 +181,66 @@ class StudyZoneController extends Controller
             'end_date' =>       new \Carbon\Carbon($request->end_date),
             'coordinates' =>    $polygon
         ]);
+
+        // Recopilar los IDs de los colaboradores presentes en el request
+        $collaboratorIds = collect($request->input('collaborators'))->pluck('id');
+
+        // Eliminar colaboradores que no están en el request
+        $studyZone->collaborators()->whereNotIn('id', $collaboratorIds)->delete();
+
+
+        foreach ($request->input('collaborators') as $collaborator) {
+            // si el colaborador no tiene ID y tiene logo_data, se guarda el logo
+            if(!isset($collaborator['id']) && isset($collaborator['logo_data']) && $collaborator['logo_data'] !== null){
+                $extension =  explode(';', explode('/', $collaborator['logo_data'])[1])[0];
+                $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$collaborator['logo_data']));
+
+                $fileName = uniqid() . '.' . $extension;
+
+                $path = 'studyzone/' . $studyZone->id . '/collaborators-logos/' . $fileName;
+
+                if(Storage::exists($path)){
+                    Storage::delete($path);
+                }
+
+                if(Storage::put($path, $fileData, 'public')){
+                    $collaborator['logo'] = $domain . $path;
+                }
+            }
+            else if(isset($collaborator['id']) && isset($collaborator['logo_data']) && $collaborator['logo_data'] !== null){
+                $extension =  explode(';', explode('/', $collaborator['logo_data'])[1])[0];
+                $fileData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '',$collaborator['logo_data']));
+
+                $fileName = uniqid() . '.' . $extension;
+
+                $path = 'studyzone/' . $studyZone->id . '/collaborators-logos/' . $fileName;
+
+                if(Storage::exists($path)){
+                    Storage::delete($path);
+                }
+
+                if(Storage::put($path, $fileData, 'public')){
+                    $collaborator['logo'] = $domain . $path;
+                }
+            }
+            // Si el colaborador tiene un ID y el logo es null, se elimina el logo
+            else if(isset($collaborator['id']) && isset($collaborator['logo']) && $collaborator['logo'] === null){
+                if(Storage::exists(Collaborator::find($collaborator['id'])['logo'])){
+                    Storage::delete($collaborator['logo']);
+                }
+            }
+            $studyZone->collaborators()->updateOrCreate(
+                ['id' => isset($collaborator['id']) ? $collaborator['id'] : null,],
+                [
+                    'collaborator_name' => $collaborator['collaborator_name'],
+                    'collaborator_web'  => isset($collaborator['collaborator_web']) ? $collaborator['collaborator_web'] : null,
+                    'contact_name'      => $collaborator['contact_name'],
+                    'contact_email'     => $collaborator['contact_email'],
+                    'contact_phone'     => $collaborator['contact_phone'],
+                    'logo'              => isset($collaborator['logo']) ? $collaborator['logo'] : null,
+                ]
+            );
+        }
 
         return $this->success(
             new StudyZoneResource($studyZone),
