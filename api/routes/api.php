@@ -101,11 +101,14 @@ Route::post('/user/autocalibration', \App\Http\Controllers\AutocalibrationContro
 
 Route::get('/polyline_observations', [PolylineObservationController::class, 'index'])->name('polyline_observations');
 
+// add delete account page for google play store, that returns simple text response
+Route::get('/delete-account', function () {
+    return ('You can delete your account from the application itselft  "Proflie" -> "Delete account" OR send bearer token to this URL "soundcollectapp.com/api/user/profile/delete" form authenticated user to remove your account.');
+})->name('delete-account');
 
 
-Route::post('/dashboard/logout', \App\Http\Controllers\Auth\LogoutController::class)
-->middleware(['auth:sanctum'])
-->name('logout');
+
+
 
 //dashboard
 Route::prefix('dashboard')
@@ -126,6 +129,10 @@ Route::prefix('dashboard')
             ->middleware(['guest:sanctum'])
             ->name('password.store');
 
+        Route::post('/logout', \App\Http\Controllers\Auth\LogoutController::class)
+            ->middleware(['auth:sanctum'])
+            ->name('logout');
+
 
         Route::middleware(['auth:sanctum'])
             ->group(function () {
@@ -136,10 +143,14 @@ Route::prefix('dashboard')
                     Route::get('/{observation}', [ObservationController::class, 'show'])->name('show');
                     Route::post('/in-polygon', [ObservationController::class, 'polygonShow'])->name('map.show');
                 });
+
+                Route::post('/geopackage', [ObservationController::class, 'geopackage'])->name('geopackage');
+                Route::post('/kml', [ObservationController::class, 'KeyholeMarkupLanguage'])->name('kml');
+
             });
 
 
-            
+
         //adminPanel
         Route::middleware(['auth:sanctum'])
             ->name('admin-panel.')
@@ -160,11 +171,6 @@ Route::prefix('dashboard')
 
             });
     });
-Route::post('/geopackage', [ObservationController::class, 'geopackage'])->name('geopackage');
-Route::post('/kml', [ObservationController::class, 'KeyholeMarkupLanguage'])->name('kml');
 
-// add delete account page for google play store, that returns simple text response
-Route::get('/delete-account', function () {
-    return ('You can delete your account from the application itselft  "Proflie" -> "Delete account" OR send bearer token to this URL "soundcollectapp.com/api/user/profile/delete" form authenticated user to remove your account.');
-})->name('delete-account');
+
 
