@@ -23,7 +23,7 @@ class StudyZone extends Model
 
     protected $fillable = [
         'id',
-        'user_id',
+        'admin_user_id',
         'name',
         'description',
         'conclusion',
@@ -38,9 +38,9 @@ class StudyZone extends Model
         'coordinates' => Polygon::class
     ];
 
-    public function user(): BelongsTo
+    public function admin_user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(AdminUser::class);
     }
 
     public function documents(): HasMany

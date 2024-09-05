@@ -14,7 +14,7 @@ class StoreStudyZoneRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'user_id' => $this->user()->id,
+            'admin_user_id' => auth('sanctum')->user()->id,
         ]);
     }
 
@@ -36,7 +36,7 @@ class StoreStudyZoneRequest extends FormRequest
     {
         return [
             'id' => ["sometimes", "nullable", "integer", "exists:sound_zones,id"],
-            'user_id' => ['required','exists:users,id'],
+            'admin_user_id' => ['required','exists:admin_users,id'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['string'],
             'conclusion' => ['string'],
