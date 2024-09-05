@@ -31,7 +31,7 @@ class StudyZoneController extends Controller
     public function index()
     {
         // Recuperamos todos los proyectos del usuario autenticado
-        $studyZones = StudyZone::where('user_id', auth()->user()->id)->get();
+        $studyZones = StudyZone::where('admin_user_id', auth('sanctum')->user()->id)->get();
 
         return $this->success(
             // Estas clases Resource sirven para poder dar un formato concreto al JSON de respuesta, es muy seguro que cualquier modificación que necesitéis
@@ -70,7 +70,7 @@ class StudyZoneController extends Controller
         ]);
 
         $studyZone = StudyZone::create([
-            'user_id' =>        auth()->user()->id,
+            'admin_user_id' =>  auth('sanctum')->user()->id,
             'name' =>           $request->name,
             'description' =>    $request->description,
             'conclusion' =>     $request->conclusion,
@@ -135,8 +135,20 @@ class StudyZoneController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreStudyZoneRequest $request, StudyZone $studyZone)
+    public function update(StudyZone $studyZone, StoreStudyZoneRequest $request)
     {
+
+        if (!$studyZone) {
+            return response()->json(['error' => 'Zona de estudio no encontrada'], 404);
+        }
+
+        if($studyZone->admin_user_id !== auth('sanctum')->user()->id){
+            return $this->error(
+                'You can only update your own study zones',
+                Response::HTTP_UNAUTHORIZED
+            );
+        }
+
         $validated = $request->validated();
 
         $polygon = new Polygon([
@@ -257,12 +269,18 @@ class StudyZoneController extends Controller
      */
     public function destroy(StudyZone $studyZone)
     {
-        if($studyZone->user_id !== auth()->user()->id){
+
+        if (!$studyZone) {
+            return response()->json(['error' => 'Zona de estudio no encontrada'], 404);
+        }
+
+        if($studyZone->admin_user_id !== auth('sanctum')->user()->id){
             return $this->error(
                 'You can only delete your own study zones',
                 Response::HTTP_UNAUTHORIZED
             );
         }
+
 
         $studyZone->delete();
 
@@ -275,8 +293,16 @@ class StudyZoneController extends Controller
     // Método para ocultar o mostrar una zona de estudio
     public function toggleVisibility(StudyZone $studyZone, Request $request)
     {
+
         if (!$studyZone) {
             return response()->json(['error' => 'Zona de estudio no encontrada'], 404);
+        }
+
+        if($studyZone->admin_user_id !== auth('sanctum')->user()->id){
+            return $this->error(
+                'You can only update your own study zones',
+                Response::HTTP_UNAUTHORIZED
+            );
         }
 
         if (isset($request->is_visible)) {
