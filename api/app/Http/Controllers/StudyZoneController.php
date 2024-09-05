@@ -226,15 +226,42 @@ class StudyZoneController extends Controller
         foreach ($request->input('documents') as $document) {
             // si el documento no tiene ID y tiene file_data, se guarda el documento
             if(!isset($document['id']) && isset($document['file_data']) && $document['file_data'] !== null){
-                $docuemntUploaded = $this->uploadDocument($document['name'], $document['file_data'], $studyZone->id);
-                $document['file'] = $docuemntUploaded['file'];
-                $document['type'] = $docuemntUploaded['type'];
+                $documentUploaded = $this->uploadDocument($document['name'], $document['file_data'], $studyZone->id);
+                $document['file'] = $documentUploaded['file'];
+                $document['type'] = $documentUploaded['type'];
             }
             // Si el documento tiene un ID y el file_data no es null, se guarda el documento
             else if(isset($document['id']) && isset($document['file_data']) && $document['file_data'] !== null){
-                $docuemntUploaded = $this->uploadDocument($document['name'], $document['file_data'], $studyZone->id);
-                $document['file'] = $docuemntUploaded['file'];
-                $document['type'] = $docuemntUploaded['type'];
+                $documentUploaded = $this->uploadDocument($document['name'], $document['file_data'], $studyZone->id);
+                $document['file'] = $documentUploaded['file'];
+                $document['type'] = $documentUploaded['type'];
+            }
+            // Si el documento tiene un ID y el file_data es null, se actualiza el nombre del documento
+            else if(isset($document['id']) && $document['file_data'] === null){
+
+                $documentToUpdate   = $studyZone->documents()->find($document['id']);
+                $domain             = env('AWS_URL');
+                $fileToMove         = str_replace($domain, '', $documentToUpdate->file);
+                $fileMoveTo         = 'studyzone/' . $studyZone->id . '/documents/' . Str::slug($document['name']) . '.' . $documentToUpdate->type;
+                if(Storage::exists($fileMoveTo) && $documentToUpdate->name !== $document['name']){
+                    // Si ya existe un documento con ese nombre añadimos la fecha y hora actual al nombre del documento
+                    $fileMoveTo = 'studyzone/' . $studyZone->id . '/documents/' . Str::slug($document['name']) . '-' . date('Ymdhis') . '.' . $documentToUpdate->type;
+                }
+                else{
+                    $document['file'] = $documentToUpdate->file;
+                }
+                $document['type']   = $documentToUpdate->type;
+
+                if(Storage::exists($fileToMove) && $documentToUpdate->name !== $document['name']){
+                    // Hacemos el cambio de nombre del documento en Storage
+                    if(Storage::move($fileToMove, $fileMoveTo)){
+                        // Actualizamos la URL del documento en la base de datos
+                        $document['file'] = $domain . $fileMoveTo;
+                    }
+                }
+                else{
+                    $document['file'] = $documentToUpdate->file;
+                }
             }
             $studyZone->documents()->updateOrCreate(
                 ['id' => isset($document['id']) ? $document['id'] : null,],
