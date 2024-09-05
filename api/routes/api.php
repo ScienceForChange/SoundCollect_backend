@@ -160,12 +160,12 @@ Route::prefix('dashboard')
                 Route::prefix('study-zone')
                     ->name('study-zone.')
                     ->group(function (){
-                        Route::post('/', [StudyZoneController::class, 'store'])->name('store');
                         Route::get('/', [StudyZoneController::class, 'index'])->name('index');
                         Route::get('/{studyZone}', [StudyZoneController::class, 'show'])->name('show');
+                        Route::post('/', [StudyZoneController::class, 'store'])->name('store');
                         Route::patch('/{studyZone}', [StudyZoneController::class, 'update'])->name('update');
-                        Route::delete('/{studyZone}', [StudyZoneController::class, 'destroy'])->name('destroy');
                         Route::patch('/{studyZone}/toggle', [StudyZoneController::class, 'toggleVisibility'])->name('toggle-visibility');
+                        Route::delete('/{studyZone}', [StudyZoneController::class, 'destroy'])->name('destroy');
                     });
 
             });
