@@ -118,7 +118,7 @@ Route::prefix('dashboard')
         Route::post('/register', \App\Http\Controllers\Auth\RegisteredUserController::class)
             ->name('register');
 
-        Route::post('/login', \App\Http\Controllers\Auth\LoginController::class)
+        Route::post('/login', \App\Http\Controllers\DashboardAuth\AdminLoginController::class)
             ->name('login');
 
         Route::post('/verify-email', \App\Http\Controllers\Auth\VerifyEmailController::class)

@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Relation::enforceMorphMap([
             'user'  => 'App\Models\User',
+            'adminUser'  => 'App\Models\AdminUser',
             'citizen' => 'App\Models\ProfileCitizen',
             'client' => 'App\Models\ProfileClient',
         ]);
