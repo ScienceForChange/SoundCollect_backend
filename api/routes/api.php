@@ -152,7 +152,7 @@ Route::prefix('dashboard')
 
 
         //adminPanel
-        Route::middleware(['auth:sanctum'])
+        Route::middleware(['auth:sanctum', 'auth.admin'])
             ->name('admin-panel.')
             ->prefix('admin-panel')
             ->group(function () {
@@ -167,7 +167,6 @@ Route::prefix('dashboard')
                         Route::delete('/{studyZone}', [StudyZoneController::class, 'destroy'])->name('destroy');
                         Route::patch('/{studyZone}/toggle', [StudyZoneController::class, 'toggleVisibility'])->name('toggle-visibility');
                     });
-
 
             });
     });
