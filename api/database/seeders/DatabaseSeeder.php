@@ -15,7 +15,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             TypeSeeder::class,
             UpdateTypesToCatalanSeeder::class,
-            AdminUserSeeder::class
+            AdminUserSeeder::class,
+            AdminSuperAdminSeeder::class
         ]);
     }
 }

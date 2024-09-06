@@ -11,6 +11,7 @@ use App\Http\Resources\UserResource;
 use App\Http\Controllers\StudyZoneController;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\PolylineObservationController;
+use Illuminate\Support\Facades\Gate;
 
 
 /*
@@ -136,6 +137,7 @@ Route::prefix('dashboard')
 
         Route::middleware(['auth:sanctum'])
             ->group(function () {
+
                 Route::name('observations.')
                     ->prefix('observations')
                     ->group(function () {
@@ -152,7 +154,7 @@ Route::prefix('dashboard')
 
 
         //adminPanel
-        Route::middleware(['auth:sanctum', 'auth.admin'])
+        Route::middleware(['auth:sanctum', 'auth.admin', 'can:manage-admin'])
             ->name('admin-panel.')
             ->prefix('admin-panel')
             ->group(function () {

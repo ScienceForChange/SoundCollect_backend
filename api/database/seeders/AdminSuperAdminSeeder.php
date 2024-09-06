@@ -1,0 +1,52 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+
+use App\Models\AdminUser;
+
+class AdminSuperAdminSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        // Crear el rol superadmin si no existe
+        $superAdminRole = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'admin']);
+        $adminRole      = Role::create(['name' => 'admin', 'guard_name' => 'admin']);
+        $permission     = Permission::create(['name' => 'manage-admin', 'guard_name' => 'admin']);
+        $adminRole->givePermissionTo('manage-admin');
+
+        // Crear el usuario superadmin si no existe
+        $superAdmin = AdminUser::firstOrCreate([
+            'id'                => Str::uuid(),
+            'avatar_id'         => '1',
+            'email'             => 'superadmin@scienceforchange.eu',
+            'password'          => Hash::make('password'),
+            'remember_token'    => Str::random(10),
+            'email_verified_at' => now(),
+        ]);
+
+        // Crear el usuario admin si no existe
+        $admin = AdminUser::firstOrCreate([
+            'id'                => Str::uuid(),
+            'avatar_id'         => '1',
+            'email'             => 'admin@scienceforchange.eu',
+            'password'          => Hash::make('password'),
+            'remember_token'    => Str::random(10),
+            'email_verified_at' => now(),
+        ]);
+
+        // Asignar el rol superadmin al usuario
+        $superAdmin->assignRole($superAdminRole);
+        $admin->assignRole($adminRole);
+    }
+}

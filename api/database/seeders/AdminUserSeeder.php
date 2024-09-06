@@ -16,15 +16,15 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
 
-        DB::table('admin_users')->insert([
-            'id' => Str::uuid(),
-            'avatar_id' => '1',
-            'email' => 'admin@scienceforchange.eu',
-            'password' => Hash::make('password'),
-            'remember_token' => Str::random(10),
-            'email_verified_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // DB::table('admin_users')->insert([
+        //     'id' => Str::uuid(),
+        //     'avatar_id' => '1',
+        //     'email' => 'admin@scienceforchange.eu',
+        //     'password' => Hash::make('password'),
+        //     'remember_token' => Str::random(10),
+        //     'email_verified_at' => now(),
+        //     'created_at' => now(),
+        //     'updated_at' => now(),
+        // ]);
     }
 }
