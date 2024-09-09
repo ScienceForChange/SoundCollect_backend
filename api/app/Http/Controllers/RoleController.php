@@ -8,11 +8,6 @@ use Illuminate\Support\Str;
 
 class RoleController extends Controller
 {
-    public function __construct()
-    {
-        // Aplicar el middleware para restringir el acceso solo a superadmins
-        $this->middleware('can:super-admin');
-    }
     /**
      * Display a listing of the resource.
      */
