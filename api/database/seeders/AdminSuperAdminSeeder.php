@@ -67,8 +67,11 @@ class AdminSuperAdminSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
+        // Asignamos todos los permisos al rol superadmin
+        $superAdminRole->givePermissionTo(Permission::all());
         // Asignar el rol superadmin al usuario
         $superAdmin->assignRole($superAdminRole);
+
         $admin->assignRole($adminRole);
     }
 }

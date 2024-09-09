@@ -22,6 +22,7 @@ class RoleController extends Controller
         // Listar todos los roles con sus permisos
         $roles = Role::with('permissions')->get();
         return response()->json($roles);
+
     }
 
     /**
