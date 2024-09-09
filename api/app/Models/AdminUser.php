@@ -64,4 +64,24 @@ class AdminUser extends Authenticatable
         'password' => 'hashed',
     ];
 
+    /**
+     * The attributes that should be appended.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = ['permissions_list', 'roles_list'];
+
+    /**
+     * The attributes that should be appended.
+     *
+     * @var array<int, string>
+     */
+
+    public function getPermissionsListAttribute(): array{
+        return $this->getAllPermissions()->pluck('name')->toArray();
+    }
+
+    public function getRolesListAttribute(): array{
+        return $this->getRoleNames()->toArray();
+    }
 }

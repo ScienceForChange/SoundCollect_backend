@@ -23,9 +23,10 @@ class AdminUserResource extends JsonResource
             'attributes' => [
                 'email' => $this->when($request->user()?->id === $this->id, $this->email),
                 'avatar_id' => $this->avatar_id,
-                'profile' => new ProfileCitizenResource($this->profile),
                 'created_at' => $this->created_at->format('Y-m-d H:i:s'),
                 'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
+                'permissions_list' => $this->permissions_list,
+                'roles_list' => $this->roles_list,
             ],
         ];
     }

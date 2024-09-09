@@ -1,17 +1,19 @@
 <?php
 
-use App\Http\Controllers\AudioProcessingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
+
+use App\Http\Controllers\AudioProcessingController;
 use App\Http\Controllers\ObservationController;
 use App\Http\Controllers\SFCController;
 use App\Http\Controllers\MapController;
 use App\Http\Resources\UserResource;
 use App\Http\Controllers\StudyZoneController;
-use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\PolylineObservationController;
-use Illuminate\Support\Facades\Gate;
+
 
 
 /*
@@ -168,6 +170,26 @@ Route::prefix('dashboard')
                         Route::patch('/{studyZone}', [StudyZoneController::class, 'update'])->name('update');
                         Route::patch('/{studyZone}/toggle', [StudyZoneController::class, 'toggleVisibility'])->name('toggle-visibility');
                         Route::delete('/{studyZone}', [StudyZoneController::class, 'destroy'])->name('destroy');
+                    });
+
+                // Gestión de roles solo para superadmin
+                Route::middleware(['can:super-admin'])
+                    ->prefix('roles')
+                    ->name('roles.')
+                    ->group(function () {
+                        Route::get('/', [\App\Http\Controllers\RoleController::class, 'index'])->name('index');
+                        Route::get('/{role}', [\App\Http\Controllers\RoleController::class, 'show'])->name('show');
+                        Route::post('/', [\App\Http\Controllers\RoleController::class, 'store'])->name('store');
+                        Route::patch('/{role}', [\App\Http\Controllers\RoleController::class, 'update'])->name('update');
+                        Route::delete('/{role}', [\App\Http\Controllers\RoleController::class, 'destroy'])->name('destroy');
+                    });
+
+                // Gestión de permisos solo para superadmin
+                Route::middleware(['can:super-admin'])
+                    ->prefix('permissions')
+                    ->name('permissions.')
+                    ->group(function () {
+                        Route::get('/', [\App\Http\Controllers\PermissionController::class, 'index'])->name('index');
                     });
 
             });
