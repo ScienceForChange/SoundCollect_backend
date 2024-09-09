@@ -34,10 +34,12 @@
     30 => 'Termwind\\Laravel\\TermwindServiceProvider',
     31 => 'Pest\\Laravel\\PestServiceProvider',
     32 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
-    33 => 'App\\Providers\\AppServiceProvider',
-    34 => 'App\\Providers\\AuthServiceProvider',
-    35 => 'App\\Providers\\EventServiceProvider',
-    36 => 'App\\Providers\\RouteServiceProvider',
+    33 => 'Spatie\\Permission\\PermissionServiceProvider',
+    34 => 'App\\Providers\\AppServiceProvider',
+    35 => 'App\\Providers\\AuthServiceProvider',
+    36 => 'App\\Providers\\EventServiceProvider',
+    37 => 'App\\Providers\\RouteServiceProvider',
+    38 => 'Spatie\\Permission\\PermissionServiceProvider',
   ),
   'eager' => 
   array (
@@ -59,10 +61,12 @@
     15 => 'Termwind\\Laravel\\TermwindServiceProvider',
     16 => 'Pest\\Laravel\\PestServiceProvider',
     17 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
-    18 => 'App\\Providers\\AppServiceProvider',
-    19 => 'App\\Providers\\AuthServiceProvider',
-    20 => 'App\\Providers\\EventServiceProvider',
-    21 => 'App\\Providers\\RouteServiceProvider',
+    18 => 'Spatie\\Permission\\PermissionServiceProvider',
+    19 => 'App\\Providers\\AppServiceProvider',
+    20 => 'App\\Providers\\AuthServiceProvider',
+    21 => 'App\\Providers\\EventServiceProvider',
+    22 => 'App\\Providers\\RouteServiceProvider',
+    23 => 'Spatie\\Permission\\PermissionServiceProvider',
   ),
   'deferred' => 
   array (

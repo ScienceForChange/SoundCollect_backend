@@ -5,6 +5,12 @@ namespace App\Providers;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+use App\Models\AdminUser;
+use App\Models\user;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
+use Carbon\Carbon;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -23,6 +29,13 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerPolicies();
+
+        Gate::before(function ($user , $ability) {
+            if ($user->hasRole('superadmin')) {
+
+                return true;
+            }
+        });
 
         ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
             return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";

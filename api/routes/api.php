@@ -1,16 +1,19 @@
 <?php
 
-use App\Http\Controllers\AudioProcessingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
+
+use App\Http\Controllers\AudioProcessingController;
 use App\Http\Controllers\ObservationController;
 use App\Http\Controllers\SFCController;
 use App\Http\Controllers\MapController;
 use App\Http\Resources\UserResource;
 use App\Http\Controllers\StudyZoneController;
-use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\PolylineObservationController;
+
 
 
 /*
@@ -101,31 +104,96 @@ Route::post('/user/autocalibration', \App\Http\Controllers\AutocalibrationContro
 
 Route::get('/polyline_observations', [PolylineObservationController::class, 'index'])->name('polyline_observations');
 
-
-//adminPanel
-Route::middleware(['auth:sanctum'])
-    ->prefix('admin-panel')
-    ->group(function () {
-
-
-        Route::prefix('study-zone')
-            ->group(function (){
-                Route::post('/', [StudyZoneController::class, 'store'])->name('study-zone.store');
-                Route::get('/', [StudyZoneController::class, 'index'])->name('study-zone.index');
-                Route::get('/{studyZone}', [StudyZoneController::class, 'show'])->name('study-zone.show');
-                Route::patch('/{studyZone}', [StudyZoneController::class, 'update'])->name('study-zone.update');
-                Route::delete('/{studyZone}', [StudyZoneController::class, 'destroy'])->name('study-zone.destroy');
-                Route::patch('/{studyZone}/toggle', [StudyZoneController::class, 'toggleVisibility'])->name('study-zone.toggle-visibility');
-            });
-
-
-    });
-
-Route::post('/geopackage', [ObservationController::class, 'geopackage'])->name('geopackage');
-Route::post('/kml', [ObservationController::class, 'KeyholeMarkupLanguage'])->name('kml');
-
 // add delete account page for google play store, that returns simple text response
 Route::get('/delete-account', function () {
     return ('You can delete your account from the application itselft  "Proflie" -> "Delete account" OR send bearer token to this URL "soundcollectapp.com/api/user/profile/delete" form authenticated user to remove your account.');
 })->name('delete-account');
+
+
+
+
+
+//dashboard
+Route::prefix('dashboard')
+    ->name('dashboard.')
+    ->group(function () {
+
+        Route::post('/register', \App\Http\Controllers\Auth\RegisteredUserController::class)
+            ->name('register');
+
+        Route::post('/login', \App\Http\Controllers\DashboardAuth\AdminLoginController::class)
+            ->name('login');
+
+        Route::post('/verify-email', \App\Http\Controllers\Auth\VerifyEmailController::class)
+            ->middleware(['throttle:6,1'])
+            ->name('verification.verify');
+
+        Route::post('/reset-password', \App\Http\Controllers\Auth\NewPasswordController::class)
+            ->middleware(['guest:sanctum'])
+            ->name('password.store');
+
+        Route::post('/logout', \App\Http\Controllers\Auth\LogoutController::class)
+            ->middleware(['auth:sanctum'])
+            ->name('logout');
+
+
+        Route::middleware(['auth:sanctum'])
+            ->group(function () {
+
+                Route::name('observations.')
+                    ->prefix('observations')
+                    ->group(function () {
+                    Route::get('/', [ObservationController::class, 'index'])->name('index');
+                    Route::get('/{observation}', [ObservationController::class, 'show'])->name('show');
+                    Route::post('/in-polygon', [ObservationController::class, 'polygonShow'])->name('map.show');
+                });
+
+                Route::post('/geopackage', [ObservationController::class, 'geopackage'])->name('geopackage');
+                Route::post('/kml', [ObservationController::class, 'KeyholeMarkupLanguage'])->name('kml');
+
+            });
+
+
+
+        //adminPanel
+        Route::middleware(['auth:sanctum', 'auth.admin', 'can:manage-admin'])
+            ->name('admin-panel.')
+            ->prefix('admin-panel')
+            ->group(function () {
+
+                Route::prefix('study-zone')
+                    ->name('study-zone.')
+                    ->group(function (){
+                        Route::get('/', [StudyZoneController::class, 'index'])->name('index');
+                        Route::get('/{studyZone}', [StudyZoneController::class, 'show'])->name('show');
+                        Route::post('/', [StudyZoneController::class, 'store'])->name('store');
+                        Route::patch('/{studyZone}', [StudyZoneController::class, 'update'])->name('update');
+                        Route::patch('/{studyZone}/toggle', [StudyZoneController::class, 'toggleVisibility'])->name('toggle-visibility');
+                        Route::delete('/{studyZone}', [StudyZoneController::class, 'destroy'])->name('destroy');
+                    });
+
+                // Gestión de roles solo para superadmin
+                Route::middleware(['can:super-admin'])
+                    ->prefix('roles')
+                    ->name('roles.')
+                    ->group(function () {
+                        Route::get('/', [\App\Http\Controllers\RoleController::class, 'index'])->name('index');
+                        Route::get('/{role}', [\App\Http\Controllers\RoleController::class, 'show'])->name('show');
+                        Route::post('/', [\App\Http\Controllers\RoleController::class, 'store'])->name('store');
+                        Route::patch('/{role}', [\App\Http\Controllers\RoleController::class, 'update'])->name('update');
+                        Route::delete('/{role}', [\App\Http\Controllers\RoleController::class, 'destroy'])->name('destroy');
+                    });
+
+                // Gestión de permisos solo para superadmin
+                Route::middleware(['can:super-admin'])
+                    ->prefix('permissions')
+                    ->name('permissions.')
+                    ->group(function () {
+                        Route::get('/', [\App\Http\Controllers\PermissionController::class, 'index'])->name('index');
+                    });
+
+            });
+    });
+
+
 
