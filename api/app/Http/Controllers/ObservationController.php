@@ -443,4 +443,19 @@ class ObservationController extends Controller
         $coordinates = explode(" ", $pointString);
         return array("x" => $coordinates[0], "y" => $coordinates[1]);
     }
+
+    public function trashed(){
+        return $this->success(
+            ObservationResource::collection(Observation::onlyTrashed()->get()),
+            Response::HTTP_OK
+        );
+    }
+
+    public function restore($id){
+        $observation = Observation::withTrashed()->find($id)->restore();
+        return $this->success(
+            new ObservationResource($observation),
+            Response::HTTP_OK
+        );
+    }
 }
