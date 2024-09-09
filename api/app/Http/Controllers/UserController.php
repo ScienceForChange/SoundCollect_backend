@@ -57,4 +57,24 @@ class UserController extends Controller
         $user->delete();
         return response()->json(null, 204);
     }
+
+    /**
+     * List trashed users
+     */
+    public function trashed()
+    {
+        // Obtenemos los usuarios eliminados
+        $users = User::onlyTrashed()->get();
+        return UserResource::collection($users);
+    }
+
+    /**
+     * Restore the specified resource from storage.
+     */
+    public function restore($id)
+    {
+        // Restauramos el usuario
+        User::withTrashed()->find($id)->restore();
+        return response()->json(null, 204);
+    }
 }
