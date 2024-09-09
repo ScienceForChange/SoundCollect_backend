@@ -23,13 +23,14 @@ class StudyZone extends Model
 
     protected $fillable = [
         'id',
-        'user_id',
+        'admin_user_id',
         'name',
         'description',
         'conclusion',
         'coordinates',
         'start_date',
         'end_date',
+        'is_visible',
     ];
 
 
@@ -37,9 +38,9 @@ class StudyZone extends Model
         'coordinates' => Polygon::class
     ];
 
-    public function user(): BelongsTo
+    public function admin_user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(AdminUser::class);
     }
 
     public function documents(): HasMany
@@ -52,4 +53,9 @@ class StudyZone extends Model
         return $this->hasMany(Collaborator::class);
     }
 
+    // Define un scope para elementos visibles
+    public function scopeVisible($query)
+    {
+        return $query->where('is_visible', true);
+    }
 }
