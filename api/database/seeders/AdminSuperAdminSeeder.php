@@ -69,9 +69,11 @@ class AdminSuperAdminSeeder extends Seeder
 
         // Asignamos todos los permisos al rol superadmin
         $superAdminRole->givePermissionTo(Permission::all());
+
         // Asignar el rol superadmin al usuario
         $superAdmin->assignRole($superAdminRole);
 
+        // Asignar el rol admin al usuario
         $admin->assignRole($adminRole);
     }
 }

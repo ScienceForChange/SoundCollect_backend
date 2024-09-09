@@ -19,6 +19,7 @@ class RoleController extends Controller
     public function index()
     {
         $this->authorize('manage-roles');
+
         // Listar todos los roles con sus permisos
         $roles = Role::with('permissions')->get();
         return response()->json($roles);
@@ -34,6 +35,7 @@ class RoleController extends Controller
 
         // Crear un nuevo rol
         $role = Role::create(['name' => Str::slug($request->name), 'guard_name' => 'admin']);
+
         // En caso de llegar con permisos, asignarlos al rol
         if ($request->has('permissions')) {
             $role->givePermissionTo($request->permissions);
@@ -48,6 +50,7 @@ class RoleController extends Controller
     public function show(string $id)
     {
         $this->authorize('manage-roles');
+
         // Mostrar un rol específico
         $role = Role::findOrFail($id);
         return response()->json($role);
@@ -58,7 +61,16 @@ class RoleController extends Controller
      */
     public function update(Request $request, string $id)
     {
+
         $this->authorize('update-roles');
+
+        $role = Role::findOrFail($id);
+
+        // Si el rol es superadmin, no se puede modificar
+        if ($role->id === 1 || $role->name === 'superadmin') {
+            return response()->json(['message' => 'No se puede modificar el rol superadmin'], 403);
+        }
+
         // Actualizar un rol específico
         $role = Role::findOrFail($id);
         $role->update($request->all());
@@ -68,11 +80,18 @@ class RoleController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(int $id)
     {
         $this->authorize('delete-roles');
-        // Eliminar un rol específico
+
         $role = Role::findOrFail($id);
+
+        // Si el rol es superadmin, no se puede eliminar
+        if ($role->id === 1 || $role->name === 'superadmin') {
+            return response()->json(['message' => 'No se puede eliminar el rol superadmin'], 403);
+        }
+
+        //Eliminar un rol específico
         $role->delete();
         return response()->json(null, 204);
     }
