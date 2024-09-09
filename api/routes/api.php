@@ -148,6 +148,8 @@ Route::prefix('dashboard')
                     Route::post('/in-polygon', [ObservationController::class, 'polygonShow'])->name('map.show');
                 });
 
+                Route::get('/study-zone', [StudyZoneController::class, 'index'])->name('index');
+                Route::get('/study-zone/{studyZone}', [StudyZoneController::class, 'show'])->name('show');
                 Route::post('/geopackage', [ObservationController::class, 'geopackage'])->name('geopackage');
                 Route::post('/kml', [ObservationController::class, 'KeyholeMarkupLanguage'])->name('kml');
 
@@ -164,8 +166,6 @@ Route::prefix('dashboard')
                 Route::prefix('study-zone')
                     ->name('study-zone.')
                     ->group(function (){
-                        Route::get('/', [StudyZoneController::class, 'index'])->name('index');
-                        Route::get('/{studyZone}', [StudyZoneController::class, 'show'])->name('show');
                         Route::post('/', [StudyZoneController::class, 'store'])->name('store');
                         Route::patch('/{studyZone}', [StudyZoneController::class, 'update'])->name('update');
                         Route::patch('/{studyZone}/toggle', [StudyZoneController::class, 'toggleVisibility'])->name('toggle-visibility');
