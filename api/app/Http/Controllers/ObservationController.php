@@ -19,6 +19,7 @@ use Throwable;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Aws\Rekognition\RekognitionClient;
+use Illuminate\Support\Facades\Auth;
 
 class ObservationController extends Controller
 {
@@ -242,7 +243,9 @@ class ObservationController extends Controller
      */
     public function destroy(Observation $observation)
     {
-        if ($observation->user_id !== auth()->user()->id) {
+
+
+        if ($observation->user_id !== auth()->user()->id && (Auth::guard('sanctum')->user() instanceof \App\Models\AdminUser) !== true) {
             return $this->error(
                 'You can only delete your own observations',
                 Response::HTTP_UNAUTHORIZED
@@ -418,7 +421,7 @@ class ObservationController extends Controller
                 }
             }
         }
-        // If the number of edges we passed through is odd, then it's in the polygon. 
+        // If the number of edges we passed through is odd, then it's in the polygon.
         if ($intersections % 2 != 0) {
             return "inside";
         } else {
