@@ -73,7 +73,10 @@ class RoleController extends Controller
 
         // Actualizar un rol específico
         $role = Role::findOrFail($id);
-        $role->update($request->all());
+        $role->syncPermissions($request->permissions);
+        //añadimos el permiso por defecto manage-admin
+        $role->givePermissionTo('manage-admin');
+
         return response()->json($role);
     }
 
