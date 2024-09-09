@@ -47,6 +47,10 @@ class AdminSuperAdminSeeder extends Seeder
         Permission::create(['name' => 'update-roles', 'guard_name' => 'admin']);
         Permission::create(['name' => 'delete-roles', 'guard_name' => 'admin']);
 
+        // Crear permisos para observaciones
+        Permission::create(['name' => 'manage-observations', 'guard_name' => 'admin']);
+        Permission::create(['name' => 'delete-observations', 'guard_name' => 'admin']);
+
         // Crear el usuario superadmin si no existe
         $superAdmin = AdminUser::firstOrCreate([
             'id'                => Str::uuid(),
