@@ -11,6 +11,7 @@ use App\Http\Controllers\ObservationController;
 use App\Http\Controllers\SFCController;
 use App\Http\Controllers\MapController;
 use App\Http\Resources\UserResource;
+use App\Http\Resources\AdminUserResource;
 use App\Http\Controllers\StudyZoneController;
 use App\Http\Controllers\PolylineObservationController;
 
@@ -118,6 +119,8 @@ Route::prefix('dashboard')
     ->name('dashboard.')
     ->group(function () {
 
+
+
         Route::post('/register', \App\Http\Controllers\Auth\RegisteredUserController::class)
             ->name('register');
 
@@ -139,6 +142,23 @@ Route::prefix('dashboard')
 
         Route::middleware(['auth:sanctum'])
             ->group(function () {
+
+                //devolvemos el usuario loggeado
+                Route::get('/user', function (Request $request) {
+
+                    if (Auth::user() instanceof \App\Models\AdminUser) {
+                        return new JsonResponse([
+                            'status' => 'success',
+                            'data' => AdminUserResource::make(Auth::user()),
+                        ], 200);
+                    }
+
+                    return new JsonResponse([
+                        'status' => 'success',
+                        'data' => UserResource::make(Auth::user()),
+                    ], 200);
+
+                });
 
                 Route::name('observations.')
                     ->prefix('observations')
