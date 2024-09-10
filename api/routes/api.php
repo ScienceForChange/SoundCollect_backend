@@ -119,8 +119,6 @@ Route::prefix('dashboard')
     ->name('dashboard.')
     ->group(function () {
 
-
-
         Route::post('/register', \App\Http\Controllers\Auth\RegisteredUserController::class)
             ->name('register');
 
