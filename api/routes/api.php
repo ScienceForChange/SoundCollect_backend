@@ -11,6 +11,7 @@ use App\Http\Controllers\ObservationController;
 use App\Http\Controllers\SFCController;
 use App\Http\Controllers\MapController;
 use App\Http\Resources\UserResource;
+use App\Http\Resources\AdminUserResource;
 use App\Http\Controllers\StudyZoneController;
 use App\Http\Controllers\PolylineObservationController;
 
@@ -118,6 +119,8 @@ Route::prefix('dashboard')
     ->name('dashboard.')
     ->group(function () {
 
+
+
         Route::post('/register', \App\Http\Controllers\Auth\RegisteredUserController::class)
             ->name('register');
 
@@ -139,6 +142,23 @@ Route::prefix('dashboard')
 
         Route::middleware(['auth:sanctum'])
             ->group(function () {
+
+                //devolvemos el usuario loggeado
+                Route::get('/user', function (Request $request) {
+
+                    if (Auth::user() instanceof \App\Models\AdminUser) {
+                        return new JsonResponse([
+                            'status' => 'success',
+                            'data' => AdminUserResource::make(Auth::user()),
+                        ], 200);
+                    }
+
+                    return new JsonResponse([
+                        'status' => 'success',
+                        'data' => UserResource::make(Auth::user()),
+                    ], 200);
+
+                });
 
                 Route::name('observations.')
                     ->prefix('observations')
@@ -163,34 +183,59 @@ Route::prefix('dashboard')
             ->prefix('admin-panel')
             ->group(function () {
 
-                Route::prefix('study-zone')
+                Route::middleware(['can:manage-study-zones'])
+                    ->prefix('study-zone')
                     ->name('study-zone.')
                     ->group(function (){
-                        Route::post('/', [StudyZoneController::class, 'store'])->name('store');
-                        Route::patch('/{studyZone}', [StudyZoneController::class, 'update'])->name('update');
-                        Route::patch('/{studyZone}/toggle', [StudyZoneController::class, 'toggleVisibility'])->name('toggle-visibility');
-                        Route::delete('/{studyZone}', [StudyZoneController::class, 'destroy'])->name('destroy');
+                        Route::get('/', [StudyZoneController::class, 'index'])->name('index');
+                        Route::get('/{studyZone}', [StudyZoneController::class, 'show'])->name('show');
+                        Route::post('/', [StudyZoneController::class, 'store'])->name('store')->middleware(['can:create-study-zones']);
+                        Route::patch('/{studyZone}', [StudyZoneController::class, 'update'])->name('update')->middleware(['can:update-study-zones']);
+                        Route::patch('/{studyZone}/toggle', [StudyZoneController::class, 'toggleVisibility'])->name('toggle-visibility')->middleware(['can:update-study-zones']);
+                        Route::delete('/{studyZone}', [StudyZoneController::class, 'destroy'])->name('destroy')->middleware(['can:delete-study-zones']);
                     });
 
                 // Gestión de roles solo para superadmin
-                Route::middleware(['can:super-admin'])
+                Route::middleware(['can:manage-roles'])
                     ->prefix('roles')
                     ->name('roles.')
                     ->group(function () {
                         Route::get('/', [\App\Http\Controllers\RoleController::class, 'index'])->name('index');
                         Route::get('/{role}', [\App\Http\Controllers\RoleController::class, 'show'])->name('show');
-                        Route::post('/', [\App\Http\Controllers\RoleController::class, 'store'])->name('store');
-                        Route::patch('/{role}', [\App\Http\Controllers\RoleController::class, 'update'])->name('update');
-                        Route::delete('/{role}', [\App\Http\Controllers\RoleController::class, 'destroy'])->name('destroy');
+                        Route::post('/', [\App\Http\Controllers\RoleController::class, 'store'])->name('store')->middleware(['can:create-roles']);
+                        Route::patch('/{role}', [\App\Http\Controllers\RoleController::class, 'update'])->name('update')->middleware(['can:update-roles']);
+                        Route::delete('/{role}', [\App\Http\Controllers\RoleController::class, 'destroy'])->name('destroy')->middleware(['can:delete-roles']);
                     });
 
                 // Gestión de permisos solo para superadmin
-                Route::middleware(['can:super-admin'])
+                Route::middleware(['can:manage-roles'])
                     ->prefix('permissions')
                     ->name('permissions.')
                     ->group(function () {
                         Route::get('/', [\App\Http\Controllers\PermissionController::class, 'index'])->name('index');
                     });
+
+                Route::middleware(['can:manage-app-users'])
+                    ->prefix('users')
+                    ->name('users.')
+                    ->group(function () {
+                        Route::get('/', [\App\Http\Controllers\UserController::class, 'index'])->name('index');
+                        Route::get('/trashed', [\App\Http\Controllers\UserController::class, 'trashed'])->name('trashed')->middleware(['can:delete-app-users']);
+                        Route::get('/{user}', [\App\Http\Controllers\UserController::class, 'show'])->name('show');
+                        Route::patch('/restore/{observation}', [\App\Http\Controllers\UserController::class, 'restore'])->name('restore')->middleware(['can:delete-app-users']);
+                        Route::delete('/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('destroy')->middleware(['can:delete-app-users']);
+                    });
+
+                Route::middleware(['can:manage-observations'])
+                    ->prefix('observations')
+                    ->name('observations.')
+                    ->group(function () {
+                        Route::get('/', [\App\Http\Controllers\ObservationController::class, 'index'])->name('index');
+                        Route::get('/trashed', [\App\Http\Controllers\ObservationController::class, 'trashed'])->name('trashed')->middleware(['can:delete-observations']);
+                        Route::get('/{observation}', [\App\Http\Controllers\ObservationController::class, 'show'])->name('show');
+                        Route::patch('/restore/{observation}', [\App\Http\Controllers\ObservationController::class, 'restore'])->name('restore')->middleware(['can:delete-observations']);
+                        Route::delete('/{observation}', [\App\Http\Controllers\ObservationController::class, 'destroy'])->name('destroy')->middleware(['can:delete-observations']);
+                        });
 
             });
     });
