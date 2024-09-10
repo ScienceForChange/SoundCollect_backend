@@ -31,7 +31,8 @@ class StudyZoneController extends Controller
     public function index()
     {
         // Recuperamos todos los proyectos del usuario autenticado
-        $studyZones = StudyZone::where('admin_user_id', auth('sanctum')->user()->id)->get();
+        //$studyZones = StudyZone::where('admin_user_id', auth('sanctum')->user()->id)->get();
+        $studyZones = StudyZone::all();
 
         return $this->success(
             // Estas clases Resource sirven para poder dar un formato concreto al JSON de respuesta, es muy seguro que cualquier modificación que necesitéis
