@@ -226,15 +226,24 @@ Route::prefix('dashboard')
                         Route::delete('/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('destroy')->middleware(['can:delete-app-users']);
                     });
 
-                Route::middleware(['can:manage-observations'])
-                    ->prefix('observations')
-                    ->name('observations.')
-                    ->group(function () {
-                        Route::get('/', [\App\Http\Controllers\ObservationController::class, 'index'])->name('index');
-                        Route::get('/trashed', [\App\Http\Controllers\ObservationController::class, 'trashed'])->name('trashed')->middleware(['can:delete-observations']);
-                        Route::get('/{observation}', [\App\Http\Controllers\ObservationController::class, 'show'])->name('show');
-                        Route::patch('/restore/{observation}', [\App\Http\Controllers\ObservationController::class, 'restore'])->name('restore')->middleware(['can:delete-observations']);
-                        Route::delete('/{observation}', [\App\Http\Controllers\ObservationController::class, 'destroy'])->name('destroy')->middleware(['can:delete-observations']);
+                    Route::middleware(['can:manage-observations'])
+                        ->prefix('observations')
+                        ->name('observations.')
+                        ->group(function () {
+                            Route::get('/', [\App\Http\Controllers\ObservationController::class, 'index'])->name('index');
+                            Route::get('/trashed', [\App\Http\Controllers\ObservationController::class, 'trashed'])->name('trashed')->middleware(['can:delete-observations']);
+                            Route::get('/{observation}', [\App\Http\Controllers\ObservationController::class, 'show'])->name('show');
+                            Route::patch('/restore/{observation}', [\App\Http\Controllers\ObservationController::class, 'restore'])->name('restore')->middleware(['can:delete-observations']);
+                            Route::delete('/{observation}', [\App\Http\Controllers\ObservationController::class, 'destroy'])->name('destroy')->middleware(['can:delete-observations']);
+                        });
+
+
+                    Route::middleware(['can:manage-admin-users'])
+                        ->prefix('admin-users')
+                        ->name('admin-users.')
+                        ->group(function () {
+                            Route::get('/', [\App\Http\Controllers\AdminUserController::class, 'index'])->name('index');
+                            Route::get('/{user}', [\App\Http\Controllers\ObservationController::class, 'show'])->name('show');
                         });
 
             });

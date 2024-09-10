@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
+use App\Models\AdminUser;
+use App\Http\Resources\AdminUserResource;
 use Illuminate\Http\Request;
 
 class AdminUserController extends Controller
@@ -11,7 +14,9 @@ class AdminUserController extends Controller
      */
     public function index()
     {
-        //
+        // Obtenemos todos los usuarios
+        $users = AdminUser::all();
+        return AdminUserResource::collection($users);
     }
 
     /**
@@ -19,19 +24,19 @@ class AdminUserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Request $request)
+    public function show(AdminUser $user)
     {
-        $user = User::where('uuid', $request->uuid)->firstOr(function () {
+        if (!$user) {
             abort(404, 'User not found');
-        });
+        };
 
-        return new UserResource($user);
+        return new AdminUserResource($user);
     }
 
     /**
