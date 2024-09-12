@@ -164,6 +164,7 @@ Route::prefix('dashboard')
                     Route::get('/', [ObservationController::class, 'index'])->name('index');
                     Route::get('/{observation}', [ObservationController::class, 'show'])->name('show');
                     Route::post('/in-polygon', [ObservationController::class, 'polygonShow'])->name('map.show');
+                    Route::post('/in-polygon-date-filter', [ObservationController::class, 'polygonShowIntervalDateFilter'])->name('map.show-date-filter');
                 });
 
                 Route::get('/study-zone', [StudyZoneController::class, 'index'])->name('index');
@@ -172,8 +173,6 @@ Route::prefix('dashboard')
                 Route::post('/kml', [ObservationController::class, 'KeyholeMarkupLanguage'])->name('kml');
 
             });
-
-
 
         //adminPanel
         Route::middleware(['auth:sanctum', 'auth.admin', 'can:manage-admin'])
@@ -233,9 +232,21 @@ Route::prefix('dashboard')
                         Route::get('/{observation}', [\App\Http\Controllers\ObservationController::class, 'show'])->name('show');
                         Route::patch('/restore/{observation}', [\App\Http\Controllers\ObservationController::class, 'restore'])->name('restore')->middleware(['can:delete-observations']);
                         Route::delete('/{observation}', [\App\Http\Controllers\ObservationController::class, 'destroy'])->name('destroy')->middleware(['can:delete-observations']);
-                        });
+                    });
 
-            });
+                Route::middleware(['can:manage-admin-users'])
+                    ->prefix('admin-users')
+                    ->name('admin-users.')
+                    ->group(function () {
+                        Route::get('/', [\App\Http\Controllers\AdminUserController::class, 'index'])->name('index');
+                        Route::get('/{user}', [\App\Http\Controllers\AdminUserController::class, 'show'])->name('show');
+                        Route::post('/', [\App\Http\Controllers\AdminUserController::class, 'store'])->name('store');
+                        Route::patch('/{user}', [\App\Http\Controllers\AdminUserController::class, 'update'])->name('update');
+                        Route::delete('/{user}', [\App\Http\Controllers\AdminUserController::class, 'destroy'])->name('destroy');
+                    });
+
+                });
+
     });
 
 
