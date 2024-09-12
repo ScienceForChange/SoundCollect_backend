@@ -54,6 +54,7 @@ class AdminSuperAdminSeeder extends Seeder
         // Crear el usuario superadmin si no existe
         $superAdmin = AdminUser::firstOrCreate([
             'id'                => Str::uuid(),
+            'name'              => 'SuperAdmin',
             'avatar_id'         => '1',
             'email'             => 'superadmin@scienceforchange.eu',
             'password'          => Hash::make('password'),
@@ -64,6 +65,7 @@ class AdminSuperAdminSeeder extends Seeder
         // Crear el usuario admin si no existe
         $admin = AdminUser::firstOrCreate([
             'id'                => Str::uuid(),
+            'name'              => 'Admin',
             'avatar_id'         => '1',
             'email'             => 'admin@scienceforchange.eu',
             'password'          => Hash::make('password'),

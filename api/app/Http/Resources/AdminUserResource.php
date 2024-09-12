@@ -21,6 +21,7 @@ class AdminUserResource extends JsonResource
         return [
             'id' => $this->id,
             'attributes' => [
+                'name' => $this->name,
                 'email' => $this->when($request->user()?->id === $this->id, $this->email),
                 'avatar_id' => $this->avatar_id,
                 'created_at' => $this->created_at->format('Y-m-d H:i:s'),
