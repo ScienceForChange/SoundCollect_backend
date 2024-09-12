@@ -40,6 +40,7 @@ class AdminUser extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'name',
         'email',
         'password',
         'avatar_id',
