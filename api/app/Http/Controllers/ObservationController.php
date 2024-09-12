@@ -290,6 +290,33 @@ class ObservationController extends Controller
         return ObservationResource::collection($observationsFiltered);
     }
 
+    public function polygonShowIntervalDateFilter(Request $request, PointInPolygonService $pointInPolygonService){
+        // We validate that the request has the required fields
+        $request->validate([
+            "concern" => ['required', new Enum(PolygonQuery::class)],
+            'polygon' => ['required', 'array'],
+            'polygon.*' => ['required', 'string'],
+            'interval'  => ['required', 'array'],
+            'interval.*' => ['required', 'date_format:Y-m-d H:i:s'],
+            'interval.end' => ['after_or_equal:interval.start'],
+        ]);
+
+        $start = $request->interval['start'];
+        $end = $request->interval['end'];
+
+        $observations = Observation::whereBetween('Leq', [20, 80])->where('created_at', '>=', $start)->where('created_at', '<=', $end)->get();
+
+        $observationsFiltered = $observations->filter(
+            fn ($observation) =>
+            // We use the pointInPolygon method to filter the observations that are within the polygon, passing string, array args and comparing the result with the concern requested
+            $pointInPolygonService->pointInPolygon(
+                sprintf("%s %s", $observation->longitude, $observation->latitude),
+                $request->polygon
+            ) === $request->concern
+        );
+
+        return ObservationResource::collection($observationsFiltered);
+    }
     public function geopackage(Request $request)
     {
 

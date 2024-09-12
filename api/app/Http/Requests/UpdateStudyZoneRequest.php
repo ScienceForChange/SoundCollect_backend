@@ -25,7 +25,7 @@ class UpdateStudyZoneRequest extends FormRequest
             'id' => ["sometimes", "nullable", "integer", "exists:sound_zones,id"],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['string'],
-            'conclusion' => ['string'],
+            'conclusion' => ['nullable','string'],
             'coordinates' => ['required', 'array'],
             'coordinates.*' => ['required', 'string'],
             'start_date' => 'required|date',

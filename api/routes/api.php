@@ -164,6 +164,7 @@ Route::prefix('dashboard')
                     Route::get('/', [ObservationController::class, 'index'])->name('index');
                     Route::get('/{observation}', [ObservationController::class, 'show'])->name('show');
                     Route::post('/in-polygon', [ObservationController::class, 'polygonShow'])->name('map.show');
+                    Route::post('/in-polygon-date-filter', [ObservationController::class, 'polygonShowIntervalDateFilter'])->name('map.show-date-filter');
                 });
 
                 Route::get('/study-zone', [StudyZoneController::class, 'index'])->name('index');

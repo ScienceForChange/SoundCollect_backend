@@ -39,7 +39,7 @@ class StoreStudyZoneRequest extends FormRequest
             'admin_user_id' => ['required','exists:admin_users,id'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['string'],
-            'conclusion' => ['string'],
+            'conclusion' => ['nullable','string'],
             'coordinates' => ['required', 'array'],
             'coordinates.*' => ['required', 'string'],
             'start_date' => 'required|date',
