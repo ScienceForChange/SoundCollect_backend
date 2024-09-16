@@ -11,7 +11,8 @@ class UpdateAdminUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        // Solo los superadmins pueden crear usuarios
+        return auth('sanctum')->user()->hasRole('superadmin');
     }
 
     /**
@@ -24,10 +25,10 @@ class UpdateAdminUserRequest extends FormRequest
         return [
             'name'                  => ['required', 'string', 'min:3', 'max:255'],
             'email'                 => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password'              => ['sometimes', 'string', 'min:8'],
-            'password_confirmation' => ['sometimes', 'string', 'min:8', 'same:password'],
+            'password'              => ['nullable', 'string', 'min:8'],
+            'password_confirmation' => ['nullable', 'string', 'min:8', 'same:password'],
             'roles_list'            => ['required', 'array'],
-            'roles_list.*.name'     => ['required', 'string'],
+            'roles_list.*'          => ['required', 'string'],
         ];
     }
 }

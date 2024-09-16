@@ -5,9 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
+use App\Traits\ApiResponses;
+use App\Http\Resources\RoleResource;
 
 class RoleController extends Controller
 {
+    use ApiResponses;
     /**
      * Display a listing of the resource.
      */
@@ -17,8 +21,11 @@ class RoleController extends Controller
 
         // Listar todos los roles con sus permisos
         $roles = Role::with('permissions')->get();
-        return response()->json($roles);
 
+        return $this->success(
+            RoleResource::collection($roles),
+            Response::HTTP_OK
+        );
     }
 
     /**

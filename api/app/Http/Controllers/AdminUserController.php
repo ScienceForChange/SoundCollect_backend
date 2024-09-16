@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\AdminUser;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Requests\StoreAdminUserRequest;
+use App\Http\Requests\UpdateAdminUserRequest;
 
 class AdminUserController extends Controller
 {
@@ -55,7 +56,7 @@ class AdminUserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, AdminUser $user)
+    public function update(UpdateAdminUserRequest $request, AdminUser $user)
     {
 
         $user->update([
