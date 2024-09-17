@@ -12,18 +12,12 @@ class PermissionController extends Controller
 {
     use ApiResponses;
 
-    public function __construct()
-    {
-        // Aplicar el middleware para restringir el acceso solo a superadmins
-        $this->middleware('can:super-admin');
-    }
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $this->authorize('manage-permissions');
+        $this->authorize('manage-roles');
         // Listar todos los permisos
         $permissions = Permission::all();
 
