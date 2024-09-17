@@ -22,7 +22,7 @@ class AdminUserResource extends JsonResource
             'id' => $this->id,
             'attributes' => [
                 'name' => $this->name,
-                'email' => $this->when($request->user()?->id === $this->id, $this->email),
+                'email' =>  $this->email,
                 'avatar_id' => $this->avatar_id,
                 'created_at' => $this->created_at->format('Y-m-d H:i:s'),
                 'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),

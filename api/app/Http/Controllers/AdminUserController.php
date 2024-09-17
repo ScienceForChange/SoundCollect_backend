@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\AdminUser;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Requests\StoreAdminUserRequest;
+use App\Http\Requests\UpdateAdminUserRequest;
 
 class AdminUserController extends Controller
 {
@@ -55,13 +56,33 @@ class AdminUserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, AdminUser $user)
+    public function update(UpdateAdminUserRequest $request, AdminUser $user)
     {
+
+        // Obtenemos el primer usuario con el rol superadmin
+        $superadmin = AdminUser::role('superadmin')->first();
+        // Si el usuario a actualizar es el superadmin, no permitimos actualizar el usuario
+        if ($user->id === $superadmin->id) {
+            // Si el usuario superadmin y coincide con el usuario logueado, permitimos la actualización de mail y password
+            if ($user->id === auth('sanctum')->user()->id) {
+                $user->update([
+                    'email' => $request->email,
+                ]);
+                // Si se envió un password, lo actualizamos
+                if ($request->password) {
+                    $user->update([
+                        'password' => Hash::make($request->password),
+                    ]);
+                }
+            }
+            return new AdminUserResource($user);
+        }
 
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
         ]);
+
         // Si se envió un password, lo actualizamos
         if ($request->password) {
             $user->update([
@@ -81,7 +102,16 @@ class AdminUserController extends Controller
     public function destroy( AdminUser $user)
     {
 
-        $user->delete();
+        // Obtenemos el primer usuario con el rol superadmin
+        $superadmin = AdminUser::role('superadmin')->first();
+        // Si el usuario a actualizar es el superadmin, no permitimos borrar el usuario
+        if ($user->id === $superadmin->id) {
+            return response()->json(['message' => 'No se puede eliminar el usuario superadmin'], 403);
+        }
+
+        // Eliminamos el usuario permanentemente eludimos el softdelete
+        $user->forceDelete();
+
         return response()->json(null, 204);
 
     }

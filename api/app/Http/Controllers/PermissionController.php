@@ -4,25 +4,27 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
+use Symfony\Component\HttpFoundation\Response;
+use App\Http\Resources\PermissionResource;
+use App\Traits\ApiResponses;
 
 class PermissionController extends Controller
 {
-
-    public function __construct()
-    {
-        // Aplicar el middleware para restringir el acceso solo a superadmins
-        $this->middleware('can:super-admin');
-    }
+    use ApiResponses;
 
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $this->authorize('manage-permissions');
+        $this->authorize('manage-roles');
         // Listar todos los permisos
         $permissions = Permission::all();
-        return response()->json($permissions);
+
+        return $this->success(
+            PermissionResource::collection($permissions),
+            Response::HTTP_OK
+        );
     }
 
     /**
