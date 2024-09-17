@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
+use Symfony\Component\HttpFoundation\Response;
+use App\Http\Resources\PermissionResource;
+use App\Traits\ApiResponses;
 
 class PermissionController extends Controller
 {
+    use ApiResponses;
 
     public function __construct()
     {
@@ -22,7 +26,11 @@ class PermissionController extends Controller
         $this->authorize('manage-permissions');
         // Listar todos los permisos
         $permissions = Permission::all();
-        return response()->json($permissions);
+
+        return $this->success(
+            PermissionResource::collection($permissions),
+            Response::HTTP_OK
+        );
     }
 
     /**

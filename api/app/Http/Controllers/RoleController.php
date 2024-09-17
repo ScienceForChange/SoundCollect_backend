@@ -39,11 +39,15 @@ class RoleController extends Controller
         $role = Role::create(['name' => Str::slug($request->name), 'guard_name' => 'admin']);
 
         // En caso de llegar con permisos, asignarlos al rol
-        if ($request->has('permissions')) {
-            $role->givePermissionTo($request->permissions);
+        if ($request->has('permissions_list')) {
+            $role->givePermissionTo($request->permissions_list);
         }
+        $role->givePermissionTo('manage-admin');
 
-        return response()->json($role);
+        return $this->success(
+            new RoleResource($role),
+            Response::HTTP_OK
+        );
     }
 
     /**
@@ -54,8 +58,11 @@ class RoleController extends Controller
         $this->authorize('manage-roles');
 
         // Mostrar un rol específico
-        $role = Role::findOrFail($id);
-        return response()->json($role);
+        $role = Role::findOrFail($id)->load('permissions');
+        return $this->success(
+            new RoleResource($role),
+            Response::HTTP_OK
+        );
     }
 
     /**
@@ -75,11 +82,15 @@ class RoleController extends Controller
 
         // Actualizar un rol específico
         $role = Role::findOrFail($id);
-        $role->syncPermissions($request->permissions);
+        $role->update(['name' => Str::slug($request->name)]);
+        $role->syncPermissions($request->permissions_list);
         //añadimos el permiso por defecto manage-admin
         $role->givePermissionTo('manage-admin');
 
-        return response()->json($role);
+        return $this->success(
+            new RoleResource($role),
+            Response::HTTP_OK
+        );
     }
 
     /**
