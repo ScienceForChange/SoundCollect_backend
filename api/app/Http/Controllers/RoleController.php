@@ -5,9 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
+use App\Traits\ApiResponses;
+use App\Http\Resources\RoleResource;
 
 class RoleController extends Controller
 {
+
+    use ApiResponses;
+
     /**
      * Display a listing of the resource.
      */
@@ -17,8 +23,11 @@ class RoleController extends Controller
 
         // Listar todos los roles con sus permisos
         $roles = Role::with('permissions')->get();
-        return response()->json($roles);
 
+        return $this->success(
+            RoleResource::collection($roles),
+            Response::HTTP_OK
+        );
     }
 
     /**
@@ -32,11 +41,15 @@ class RoleController extends Controller
         $role = Role::create(['name' => Str::slug($request->name), 'guard_name' => 'admin']);
 
         // En caso de llegar con permisos, asignarlos al rol
-        if ($request->has('permissions')) {
-            $role->givePermissionTo($request->permissions);
+        if ($request->has('permissions_list')) {
+            $role->givePermissionTo($request->permissions_list);
         }
+        $role->givePermissionTo('manage-admin');
 
-        return response()->json($role);
+        return $this->success(
+            new RoleResource($role),
+            Response::HTTP_OK
+        );
     }
 
     /**
@@ -47,8 +60,11 @@ class RoleController extends Controller
         $this->authorize('manage-roles');
 
         // Mostrar un rol específico
-        $role = Role::findOrFail($id);
-        return response()->json($role);
+        $role = Role::findOrFail($id)->load('permissions');
+        return $this->success(
+            new RoleResource($role),
+            Response::HTTP_OK
+        );
     }
 
     /**
@@ -68,11 +84,15 @@ class RoleController extends Controller
 
         // Actualizar un rol específico
         $role = Role::findOrFail($id);
-        $role->syncPermissions($request->permissions);
+        $role->update(['name' => Str::slug($request->name)]);
+        $role->syncPermissions($request->permissions_list);
         //añadimos el permiso por defecto manage-admin
         $role->givePermissionTo('manage-admin');
 
-        return response()->json($role);
+        return $this->success(
+            new RoleResource($role),
+            Response::HTTP_OK
+        );
     }
 
     /**
@@ -93,4 +113,5 @@ class RoleController extends Controller
         $role->delete();
         return response()->json(null, 204);
     }
+
 }

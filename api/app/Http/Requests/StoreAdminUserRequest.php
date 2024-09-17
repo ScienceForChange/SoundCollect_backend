@@ -6,8 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAdminUserRequest extends FormRequest
 {
-
-
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -30,7 +28,7 @@ class StoreAdminUserRequest extends FormRequest
             'password'              => ['required', 'string', 'min:8'],
             'password_confirmation' => ['required', 'string', 'min:8', 'same:password'],
             'roles_list'            => ['required', 'array'],
-            'roles_list.*.name'     => ['required', 'string'],
+            'roles_list.*'     => ['required', 'string'],
         ];
     }
 }
