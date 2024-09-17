@@ -11,7 +11,9 @@ use App\Http\Resources\RoleResource;
 
 class RoleController extends Controller
 {
+
     use ApiResponses;
+
     /**
      * Display a listing of the resource.
      */
@@ -111,4 +113,5 @@ class RoleController extends Controller
         $role->delete();
         return response()->json(null, 204);
     }
+
 }
