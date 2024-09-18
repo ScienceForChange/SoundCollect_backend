@@ -219,7 +219,7 @@ Route::prefix('dashboard')
                         Route::get('/', [\App\Http\Controllers\UserController::class, 'index'])->name('index');
                         Route::get('/trashed', [\App\Http\Controllers\UserController::class, 'trashed'])->name('trashed')->middleware(['can:delete-app-users']);
                         Route::get('/{user}', [\App\Http\Controllers\UserController::class, 'show'])->name('show');
-                        Route::patch('/restore/{observation}', [\App\Http\Controllers\UserController::class, 'restore'])->name('restore')->middleware(['can:delete-app-users']);
+                        Route::patch('/restore/{user}', [\App\Http\Controllers\UserController::class, 'restore'])->name('restore')->middleware(['can:delete-app-users']);
                         Route::delete('/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('destroy')->middleware(['can:delete-app-users']);
                     });
 
