@@ -26,8 +26,8 @@ class StudyZoneResource extends JsonResource
             'end_date' => $this->end_date,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'is_active' => $this->is_active,
             'relationships' => [
-                'user' => $this->admin_user,
                 'documents' => $this->documents,
                 'collaborators' => $this->collaborators,
             ],
