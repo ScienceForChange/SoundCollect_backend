@@ -143,13 +143,6 @@ class StudyZoneController extends Controller
             return response()->json(['error' => 'Zona de estudio no encontrada'], 404);
         }
 
-        if($studyZone->admin_user_id !== auth('sanctum')->user()->id){
-            return $this->error(
-                'You can only update your own study zones',
-                Response::HTTP_UNAUTHORIZED
-            );
-        }
-
         $validated = $request->validated();
 
         $polygon = new Polygon([
@@ -324,13 +317,6 @@ class StudyZoneController extends Controller
 
         if (!$studyZone) {
             return response()->json(['error' => 'Zona de estudio no encontrada'], 404);
-        }
-
-        if($studyZone->admin_user_id !== auth('sanctum')->user()->id){
-            return $this->error(
-                'You can only update your own study zones',
-                Response::HTTP_UNAUTHORIZED
-            );
         }
 
         if (isset($request->is_visible)) {
