@@ -485,4 +485,57 @@ class ObservationController extends Controller
             Response::HTTP_OK
         );
     }
+
+    public function addGPKP(Request $request)
+    {
+        $file = $request->file('file'); // Recoge el archivo
+        $fileName = $file->getClientOriginalName();
+        $fileData = file_get_contents($file->getRealPath());
+        $gpkgPath = storage_path('app/public/layer.gpkg');
+        file_put_contents($gpkgPath, $fileData);
+        $outputGeojson = storage_path('app/public/layer.geojson');
+
+
+        // Comando ogrinfo para detectar el CRS y listar capas
+        $processInfo = new Process(['ogrinfo', $gpkgPath, '-al', '-so']);
+        try {
+            $processInfo->mustRun();
+            $output = $processInfo->getOutput();
+        } catch (ProcessFailedException $exception) {
+            return response()->json(['error' => 'Error al obtener información del GPKG'], 500);
+        }
+
+        // Extraer el nombre de la primera capa
+        preg_match('/Layer name: (\w+)/', $output, $matches);
+        if (isset($matches[1])) {
+            $layerName = $matches[1]; // Nombre de la primera capa
+        } else {
+            return response()->json(['error' => 'No se pudo encontrar ninguna capa en el archivo GPKG'], 500);
+        }
+
+        // Verifica si el CRS es EPSG:4326
+        if (strpos($output, 'EPSG:4326') === false) {
+            // No es EPSG:4326, así que convertimos
+            $processConvert = new Process(['ogr2ogr', '-f', 'GeoJSON', '-t_srs', 'EPSG:4326', $outputGeojson, $gpkgPath, $layerName]);
+
+            try {
+                $processConvert->mustRun();
+            } catch (ProcessFailedException $exception) {
+                return response()->json(['error' => 'Error al convertir GPKG a GeoJSON'], 500);
+            }
+        } else {
+            // Ya está en EPSG:4326, simplemente convertimos a GeoJSON
+            $processConvert = new Process(['ogr2ogr', '-f', 'GeoJSON', $outputGeojson, $gpkgPath, $layerName]);
+
+            try {
+                $processConvert->mustRun();
+            } catch (ProcessFailedException $exception) {
+                return response()->json(['error' => 'Error al convertir GPKG a GeoJSON'], 500);
+            }
+        }
+
+        // Devolver el archivo GeoJSON
+        return response()->file($outputGeojson);
+    }
+
 }
