@@ -488,6 +488,17 @@ class ObservationController extends Controller
 
     public function addGPKP(Request $request)
     {
+        //delete if exist layer.gpkg and layer.geojson
+        $gpkgPath = storage_path('app/public/layer.gpkg');
+        $geojsonPath = storage_path('app/public/layer.geojson');
+        if (file_exists($gpkgPath)) {
+            unlink($gpkgPath);
+        }
+        if (file_exists($geojsonPath)) {
+            unlink($geojsonPath);
+        }
+
+
         $file = $request->file('file'); // Recoge el archivo
         $fileName = $file->getClientOriginalName();
         $fileData = file_get_contents($file->getRealPath());
