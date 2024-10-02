@@ -20,7 +20,7 @@ return new class extends Migration
         Schema::table('observations', function (Blueprint $table) {
             $table->decimal('longitude', 8, 5)->nullable()->change();
             $table->decimal('latitude', 7, 5)->nullable()->change();
-            $table->string('path')->nullable()->change();
+            $table->text('path')->nullable()->change();
         });
     }
 

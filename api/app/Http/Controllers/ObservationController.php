@@ -16,7 +16,10 @@ use App\Enums\Observation\PolygonQuery;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Support\Facades\Http;
 use Throwable;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Aws\Rekognition\RekognitionClient;
+use Illuminate\Support\Facades\Auth;
 
 class ObservationController extends Controller
 {
@@ -240,7 +243,9 @@ class ObservationController extends Controller
      */
     public function destroy(Observation $observation)
     {
-        if ($observation->user_id !== auth()->user()->id) {
+
+
+        if ($observation->user_id !== auth()->user()->id && (Auth::guard('sanctum')->user() instanceof \App\Models\AdminUser) !== true) {
             return $this->error(
                 'You can only delete your own observations',
                 Response::HTTP_UNAUTHORIZED
@@ -283,6 +288,81 @@ class ObservationController extends Controller
         );
 
         return ObservationResource::collection($observationsFiltered);
+    }
+
+    public function polygonShowIntervalDateFilter(Request $request, PointInPolygonService $pointInPolygonService){
+        // We validate that the request has the required fields
+        $request->validate([
+            "concern" => ['required', new Enum(PolygonQuery::class)],
+            'polygon' => ['required', 'array'],
+            'polygon.*' => ['required', 'string'],
+            'interval'  => ['required', 'array'],
+            'interval.*' => ['required', 'date_format:Y-m-d H:i:s'],
+            'interval.end' => ['after_or_equal:interval.start'],
+        ]);
+
+        $start = $request->interval['start'];
+        $end = $request->interval['end'];
+
+        $observations = Observation::whereBetween('Leq', [20, 80])->where('created_at', '>=', $start)->where('created_at', '<=', $end)->get();
+
+        $observationsFiltered = $observations->filter(
+            fn ($observation) =>
+            // We use the pointInPolygon method to filter the observations that are within the polygon, passing string, array args and comparing the result with the concern requested
+            $pointInPolygonService->pointInPolygon(
+                sprintf("%s %s", $observation->longitude, $observation->latitude),
+                $request->polygon
+            ) === $request->concern
+        );
+
+        return ObservationResource::collection($observationsFiltered);
+    }
+    public function geopackage(Request $request)
+    {
+
+        // Ruta del archivo GPKG a crear
+        $outputPath = storage_path('app/public/observations.gpkg');
+
+        // Obtener geojson
+        $geojson = $request->geojson['features'];
+
+        // Convertir a JSON
+        $jsonContent = json_encode(['type' => 'FeatureCollection', 'features' => $geojson], JSON_PRETTY_PRINT);
+
+        // Guardar en archivo
+        $geojsonPath = storage_path('app/public/observacions.geojson');
+        file_put_contents($geojsonPath, $jsonContent);
+
+        // Comando para convertir archivo JSON a GPKG
+        $command = "ogr2ogr -f 'GPKG' $outputPath $geojsonPath";
+        shell_exec($command);
+
+        return response()->download($outputPath);
+
+    }
+
+    public function KeyholeMarkupLanguage(Request $request)
+    {
+
+        // Ruta del archivo KML a crear
+        $outputPath = storage_path('app/public/observations.kml');
+
+        // Obtener geojson
+        $geojson = $request->geojson['features'];
+
+        // Convertir a JSON
+        $jsonContent = json_encode(['type' => 'FeatureCollection', 'features' => $geojson], JSON_PRETTY_PRINT);
+
+        // Guardar en archivo
+        $geojsonPath = storage_path('app/public/observacions.geojson');
+        file_put_contents($geojsonPath, $jsonContent);
+
+        // Comando para convertir archivo JSON a KML
+        $command = "ogr2ogr -f 'KML' $outputPath $geojsonPath";
+        shell_exec($command);
+
+        return response()->download($outputPath);
+
     }
 
     public function downloadAsCsv(Request $request, PointInPolygonService $pointInPolygonService)
@@ -368,7 +448,7 @@ class ObservationController extends Controller
                 }
             }
         }
-        // If the number of edges we passed through is odd, then it's in the polygon. 
+        // If the number of edges we passed through is odd, then it's in the polygon.
         if ($intersections % 2 != 0) {
             return "inside";
         } else {
@@ -390,4 +470,97 @@ class ObservationController extends Controller
         $coordinates = explode(" ", $pointString);
         return array("x" => $coordinates[0], "y" => $coordinates[1]);
     }
+
+    public function trashed(){
+        return $this->success(
+            ObservationResource::collection(Observation::onlyTrashed()->get()),
+            Response::HTTP_OK
+        );
+    }
+
+    public function restore($id){
+        $observation = Observation::withTrashed()->find($id)->restore();
+        return $this->success(
+            new ObservationResource($observation),
+            Response::HTTP_OK
+        );
+    }
+
+    public function gpkgKmlToGEOJson(Request $request)
+    {
+        //delete if exist layer.gpkg and layer.geojson
+        $gpkgPath = storage_path('app/public/layer.gpkg');
+        $kmlPath = storage_path('app/public/layer.kml');
+        $geojsonPath = storage_path('app/public/layer.geojson');
+        if (file_exists($gpkgPath)) {
+            unlink($gpkgPath);
+        }
+        if (file_exists($geojsonPath)) {
+            unlink($geojsonPath);
+        }
+        if (file_exists($kmlPath)) {
+            unlink($kmlPath);
+        }
+
+
+        $file = $request->file('file'); // Recoge el archivo
+        $fileName = $file->getClientOriginalName();
+
+        // Obtenemos la extensión del archivo
+        $extension = $file->getClientOriginalExtension();
+        if ($extension === 'gpkg') {
+            $originFilePath = storage_path('app/public/layer.gpkg');
+        }
+        elseif ($extension === 'kml') {
+            $originFilePath = storage_path('app/public/layer.kml');
+        }
+
+        $fileData = file_get_contents($file->getRealPath());
+        $originFilePath = storage_path('app/public/layer.gpkg');
+        file_put_contents($originFilePath, $fileData);
+        $outputGeojson = storage_path('app/public/layer.geojson');
+
+
+        // Comando ogrinfo para detectar el CRS y listar capas
+        $processInfo = new Process(['ogrinfo', $originFilePath, '-al', '-so']);
+        try {
+            $processInfo->mustRun();
+            $output = $processInfo->getOutput();
+        } catch (ProcessFailedException $exception) {
+            return response()->json(['error' => 'Error al obtener información del GPKG'], 500);
+        }
+
+        // Extraer el nombre de la primera capa
+        preg_match('/Layer name: (\w+)/', $output, $matches);
+        if (isset($matches[1])) {
+            $layerName = $matches[1]; // Nombre de la primera capa
+        } else {
+            return response()->json(['error' => 'No se pudo encontrar ninguna capa en el archivo GPKG'], 500);
+        }
+
+        // Verifica si el CRS es EPSG:4326
+        if (strpos($output, 'EPSG:4326') === false) {
+            // No es EPSG:4326, así que convertimos
+            $processConvert = new Process(['ogr2ogr', '-f', 'GeoJSON', '-t_srs', 'EPSG:4326', $outputGeojson, $originFilePath, $layerName]);
+
+            try {
+                $processConvert->mustRun();
+            } catch (ProcessFailedException $exception) {
+                return response()->json(['error' => 'Error al convertir GPKG a GeoJSON'], 500);
+            }
+        } else {
+            // Ya está en EPSG:4326, simplemente convertimos a GeoJSON
+            $processConvert = new Process(['ogr2ogr', '-f', 'GeoJSON', $outputGeojson, $originFilePath, $layerName]);
+
+            try {
+                $processConvert->mustRun();
+            } catch (ProcessFailedException $exception) {
+                return response()->json(['error' => 'Error al convertir GPKG a GeoJSON'], 500);
+            }
+        }
+
+        // Devolver el archivo GeoJSON
+        return response()->file($outputGeojson);
+    }
+
 }
