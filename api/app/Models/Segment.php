@@ -39,7 +39,8 @@ class Segment extends Model
         'fluctuation',
         'sharpness',
         'loudness', 
-        'roughness'
+        'roughness',
+        'spec_3_dbc'
     ];
 
     protected $casts = [
