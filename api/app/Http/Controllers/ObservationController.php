@@ -486,10 +486,11 @@ class ObservationController extends Controller
         );
     }
 
-    public function addGPKP(Request $request)
+    public function gpkgKmlToGEOJson(Request $request)
     {
         //delete if exist layer.gpkg and layer.geojson
         $gpkgPath = storage_path('app/public/layer.gpkg');
+        $kmlPath = storage_path('app/public/layer.kml');
         $geojsonPath = storage_path('app/public/layer.geojson');
         if (file_exists($gpkgPath)) {
             unlink($gpkgPath);
@@ -497,18 +498,31 @@ class ObservationController extends Controller
         if (file_exists($geojsonPath)) {
             unlink($geojsonPath);
         }
+        if (file_exists($kmlPath)) {
+            unlink($kmlPath);
+        }
 
 
         $file = $request->file('file'); // Recoge el archivo
         $fileName = $file->getClientOriginalName();
+
+        // Obtenemos la extensión del archivo
+        $extension = $file->getClientOriginalExtension();
+        if ($extension === 'gpkg') {
+            $originFilePath = storage_path('app/public/layer.gpkg');
+        }
+        elseif ($extension === 'kml') {
+            $originFilePath = storage_path('app/public/layer.kml');
+        }
+
         $fileData = file_get_contents($file->getRealPath());
-        $gpkgPath = storage_path('app/public/layer.gpkg');
-        file_put_contents($gpkgPath, $fileData);
+        $originFilePath = storage_path('app/public/layer.gpkg');
+        file_put_contents($originFilePath, $fileData);
         $outputGeojson = storage_path('app/public/layer.geojson');
 
 
         // Comando ogrinfo para detectar el CRS y listar capas
-        $processInfo = new Process(['ogrinfo', $gpkgPath, '-al', '-so']);
+        $processInfo = new Process(['ogrinfo', $originFilePath, '-al', '-so']);
         try {
             $processInfo->mustRun();
             $output = $processInfo->getOutput();
@@ -527,7 +541,7 @@ class ObservationController extends Controller
         // Verifica si el CRS es EPSG:4326
         if (strpos($output, 'EPSG:4326') === false) {
             // No es EPSG:4326, así que convertimos
-            $processConvert = new Process(['ogr2ogr', '-f', 'GeoJSON', '-t_srs', 'EPSG:4326', $outputGeojson, $gpkgPath, $layerName]);
+            $processConvert = new Process(['ogr2ogr', '-f', 'GeoJSON', '-t_srs', 'EPSG:4326', $outputGeojson, $originFilePath, $layerName]);
 
             try {
                 $processConvert->mustRun();
@@ -536,7 +550,7 @@ class ObservationController extends Controller
             }
         } else {
             // Ya está en EPSG:4326, simplemente convertimos a GeoJSON
-            $processConvert = new Process(['ogr2ogr', '-f', 'GeoJSON', $outputGeojson, $gpkgPath, $layerName]);
+            $processConvert = new Process(['ogr2ogr', '-f', 'GeoJSON', $outputGeojson, $originFilePath, $layerName]);
 
             try {
                 $processConvert->mustRun();
