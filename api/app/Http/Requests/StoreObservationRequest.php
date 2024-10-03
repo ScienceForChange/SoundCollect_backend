@@ -83,6 +83,7 @@ class StoreObservationRequest extends FormRequest
             'segments.*.freq_3' => ['sometimes'],
             'segments.*.spec_3' => ['sometimes'],
             'segments.*.spec_3_dB' => ['sometimes'],
+            'segments.*.spec_3_dBC' => ['sometimes'],
         ];
     }
 }

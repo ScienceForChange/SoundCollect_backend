@@ -39,14 +39,16 @@ class Segment extends Model
         'fluctuation',
         'sharpness',
         'loudness', 
-        'roughness'
+        'roughness',
+        'spec_3_dBC',
     ];
 
     protected $casts = [
         'LAeqT' => 'array',
         'freq_3' => 'array',
         'spec_3' => 'array',
-        'spec_3_dB' => 'array'
+        'spec_3_dB' => 'array',
+        'spec_3_dBC' => 'array'
     ];
 
     // segments have hasmany relationship with observations

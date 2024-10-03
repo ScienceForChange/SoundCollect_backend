@@ -34,7 +34,8 @@ class SegmentResource extends JsonResource
             'fluctuation' => $this->fluctuation,
             'sharpness' => $this->sharpness,
             'loudness' => $this->loudness,
-            'roughness' => $this->roughness
+            'roughness' => $this->roughness,
+            'spec_3_dBC' => $this->spec_3_dBC
         ];
     }
 }
