@@ -488,79 +488,90 @@ class ObservationController extends Controller
 
     public function gpkgKmlToGEOJson(Request $request)
     {
-        //delete if exist layer.gpkg and layer.geojson
-        $gpkgPath = storage_path('app/public/layer.gpkg');
-        $kmlPath = storage_path('app/public/layer.kml');
-        $geojsonPath = storage_path('app/public/layer.geojson');
-        if (file_exists($gpkgPath)) {
-            unlink($gpkgPath);
-        }
-        if (file_exists($geojsonPath)) {
-            unlink($geojsonPath);
-        }
-        if (file_exists($kmlPath)) {
-            unlink($kmlPath);
-        }
 
 
-        $file = $request->file('file'); // Recoge el archivo
-        $fileName = $file->getClientOriginalName();
 
-        // Obtenemos la extensión del archivo
-        $extension = $file->getClientOriginalExtension();
-        if ($extension === 'gpkg') {
+        $files = $request->file('files'); // Recoge el archivo
+
+        for($i = 0; $i < count($files); $i++) {
+            $file = $files[$i];
+            $fileName = $file->getClientOriginalName();
+
+            //delete if exist layer.gpkg and layer.geojson
+            $gpkgPath = storage_path('app/public/layer.gpkg');
+            $kmlPath = storage_path('app/public/layer.kml');
+            $geojsonPath = storage_path('app/public/layer.geojson');
+            if (file_exists($gpkgPath)) {
+                unlink($gpkgPath);
+            }
+            if (file_exists($geojsonPath)) {
+                unlink($geojsonPath);
+            }
+            if (file_exists($kmlPath)) {
+                unlink($kmlPath);
+            }
+
+            // Obtenemos la extensión del archivo
+            $extension = $file->getClientOriginalExtension();
+            if ($extension === 'gpkg') {
+                $originFilePath = storage_path('app/public/layer.gpkg');
+            }
+            elseif ($extension === 'kml') {
+                $originFilePath = storage_path('app/public/layer.kml');
+            }
+
+            $fileData = file_get_contents($file->getRealPath());
             $originFilePath = storage_path('app/public/layer.gpkg');
-        }
-        elseif ($extension === 'kml') {
-            $originFilePath = storage_path('app/public/layer.kml');
-        }
-
-        $fileData = file_get_contents($file->getRealPath());
-        $originFilePath = storage_path('app/public/layer.gpkg');
-        file_put_contents($originFilePath, $fileData);
-        $outputGeojson = storage_path('app/public/layer.geojson');
+            file_put_contents($originFilePath, $fileData);
+            $outputGeojson = storage_path('app/public/layer.geojson');
 
 
-        // Comando ogrinfo para detectar el CRS y listar capas
-        $processInfo = new Process(['ogrinfo', $originFilePath, '-al', '-so']);
-        try {
-            $processInfo->mustRun();
-            $output = $processInfo->getOutput();
-        } catch (ProcessFailedException $exception) {
-            return response()->json(['error' => 'Error al obtener información del GPKG'], 500);
-        }
-
-        // Extraer el nombre de la primera capa
-        preg_match('/Layer name: (\w+)/', $output, $matches);
-        if (isset($matches[1])) {
-            $layerName = $matches[1]; // Nombre de la primera capa
-        } else {
-            return response()->json(['error' => 'No se pudo encontrar ninguna capa en el archivo GPKG'], 500);
-        }
-
-        // Verifica si el CRS es EPSG:4326
-        if (strpos($output, 'EPSG:4326') === false) {
-            // No es EPSG:4326, así que convertimos
-            $processConvert = new Process(['ogr2ogr', '-f', 'GeoJSON', '-t_srs', 'EPSG:4326', $outputGeojson, $originFilePath, $layerName]);
-
+            // Comando ogrinfo para detectar el CRS y listar capas
+            $processInfo = new Process(['ogrinfo', $originFilePath, '-al', '-so']);
             try {
-                $processConvert->mustRun();
+                $processInfo->mustRun();
+                $output = $processInfo->getOutput();
             } catch (ProcessFailedException $exception) {
-                return response()->json(['error' => 'Error al convertir GPKG a GeoJSON'], 500);
+                return response()->json(['error' => 'Error al obtener información del GPKG'], 500);
             }
-        } else {
-            // Ya está en EPSG:4326, simplemente convertimos a GeoJSON
-            $processConvert = new Process(['ogr2ogr', '-f', 'GeoJSON', $outputGeojson, $originFilePath, $layerName]);
 
-            try {
-                $processConvert->mustRun();
-            } catch (ProcessFailedException $exception) {
-                return response()->json(['error' => 'Error al convertir GPKG a GeoJSON'], 500);
+            // Extraer el nombre de la primera capa
+            preg_match('/Layer name: (\w+)/', $output, $matches);
+            if (isset($matches[1])) {
+                $layerName = $matches[1]; // Nombre de la primera capa
+            } else {
+                return response()->json(['error' => 'No se pudo encontrar ninguna capa en el archivo GPKG'], 500);
             }
+
+            // Verifica si el CRS es EPSG:4326
+            if (strpos($output, 'EPSG:4326') === false) {
+                // No es EPSG:4326, así que convertimos
+                $processConvert = new Process(['ogr2ogr', '-f', 'GeoJSON', '-t_srs', 'EPSG:4326', $outputGeojson, $originFilePath, $layerName]);
+
+                try {
+                    $processConvert->mustRun();
+                } catch (ProcessFailedException $exception) {
+                    return response()->json(['error' => 'Error al convertir GPKG a GeoJSON'], 500);
+                }
+            } else {
+                // Ya está en EPSG:4326, simplemente convertimos a GeoJSON
+                $processConvert = new Process(['ogr2ogr', '-f', 'GeoJSON', $outputGeojson, $originFilePath, $layerName]);
+
+                try {
+                    $processConvert->mustRun();
+                } catch (ProcessFailedException $exception) {
+                    return response()->json(['error' => 'Error al convertir GPKG a GeoJSON'], 500);
+                }
+            }
+
+            // Obetenemos el contenido del archivo GeoJSON y lo almacenamos en un array
+            $geojsonContent[] = json_decode(file_get_contents($outputGeojson), true);
         }
 
-        // Devolver el archivo GeoJSON
-        return response()->file($outputGeojson);
+        // Devolver el archivo geojsonContent
+        return response()->json($geojsonContent);
     }
+
+
 
 }
