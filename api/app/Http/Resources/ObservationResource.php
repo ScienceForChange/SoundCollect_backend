@@ -52,7 +52,7 @@ class ObservationResource extends JsonResource
                 'uneventful' => $this->transformValues($this->uneventful),
                 'calm' => $this->transformValues($this->calm),
                 'annoying' => $this->transformValues($this->annoying),
-                'eventfull' => $this->transformValues($this->eventfull),
+                'eventful' => $this->transformValues($this->eventful),
                 'monotonous' => $this->transformValues($this->monotonous),
                 'overall' => $this->overall,
                 'user_id' => $this->user_id,

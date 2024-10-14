@@ -62,7 +62,7 @@ class StoreObservationRequest extends FormRequest
             'uneventful' => ['sometimes'],
             'calm' => ['sometimes'],
             'annoying' => ['sometimes'],
-            'eventfull' => ['sometimes'],
+            'eventful' => ['sometimes'],
             'monotonous' => ['sometimes'],
             'overall' => ['sometimes'],
             'user_id' => ['required','exists:users,id'],
