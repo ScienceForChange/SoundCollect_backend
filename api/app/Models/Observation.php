@@ -59,7 +59,7 @@ class Observation extends Model
         'uneventful',
         'calm',
         'annoying',
-        'eventfull',
+        'eventful',
         'monotonous',
         'overall',
         'user_id',
