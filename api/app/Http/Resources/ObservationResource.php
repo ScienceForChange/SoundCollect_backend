@@ -71,11 +71,11 @@ class ObservationResource extends JsonResource
 
     public function transformValues($value) {
         return match ($value) {
-            'Molt d\'acord' => 5,
-            'D’acord' => 4,
-            'Nid\'acord / no en des acord' => 3,
-            'Desacord' => 2,
-            'Molt en desacord' => 1,
+            '5' => 5,
+            '4' => 4,
+            '3' => 3,
+            '2' => 2,
+            '1' => 1,
             default => 'N/A',
         };
     }
