@@ -11,7 +11,6 @@ env:
   NGINX_IMAGE: carlossfc/soundcollect-nginx:${{ github.sha }}
   PROXY_IMAGE: carlossfc/soundcollect-proxy:${{ github.sha }}
   MYSQL_IMAGE: carlossfc/soundcollect-mysql:${{ github.sha }}
-  FRONTEND_IMAGE: carlossfc/soundcollect-frontend:${{ github.sha }}
   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
 jobs:
@@ -125,22 +124,9 @@ jobs:
           docker build -t $PROXY_IMAGE -f ./Dockerfile.proxy .
           docker push $PROXY_IMAGE
 
-  build-frontend:
-    needs: [ analyze, test ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build frontend image
-        run: |
-          docker build -t $FRONTEND_IMAGE --target=prod -f ./frontend/Dockerfile .
-          docker push $FRONTEND_IMAGE
 
   deploy-prod:
-    needs: [ build-frontend, build-nginx, build-proxy ]
+    needs: [ build-nginx, build-proxy ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

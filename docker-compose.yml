@@ -10,20 +10,7 @@ services:
     volumes:
       - ./deployment/config/proxy-dev.conf:/etc/nginx/nginx.conf
     depends_on:
-      - frontend
       - nginx
-
-  frontend:
-    build:
-      context: .
-      dockerfile: ./frontend/Dockerfile
-      target: dev
-    restart: unless-stopped
-    volumes:
-      - ./frontend:/usr/src/app
-      - /usr/src/app/node_modules
-    environment:
-      - NODE_ENV=local
 
   api:
     build:
