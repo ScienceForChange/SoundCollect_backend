@@ -103,8 +103,9 @@ class AdminUserController extends Controller
     {
 
         // Obtenemos el primer usuario con el rol superadmin
-        $superadmin = AdminUser::role('superadmin')->first();
+        $superadmin = AdminUser::role('superadmin')->orderBy('created_at')->first();
         // Si el usuario a actualizar es el superadmin, no permitimos borrar el usuario
+
         if ($user->id === $superadmin->id) {
             return response()->json(['message' => 'No se puede eliminar el usuario superadmin'], 403);
         }
